@@ -303,7 +303,6 @@ if __name__ == '__main__':
 				  'vis_params': vis_params}
 
 	print(parameters)
-    print('*'*20)
 	seg_times, patch_times = seg_and_patch(**directories, **parameters,
 											patch_size = args.patch_size, step_size=args.step_size, 
 											seg = args.seg,  use_default_params=False, save_mask = True, 
