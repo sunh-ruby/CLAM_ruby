@@ -184,6 +184,9 @@ def seg_and_patch(source, save_dir, patch_save_dir, mask_save_dir, stitch_save_d
 
 
 		seg_time_elapsed = -1
+		print('segment params: ', current_seg_params)
+		print('filter params: ', current_filter_params)
+		dasfv
 		if seg:
 			WSI_object, seg_time_elapsed = segment(WSI_object, current_seg_params, current_filter_params) 
 
