@@ -140,7 +140,8 @@ class WholeSlideImage(object):
                 hole_contours.append(filtered_holes)
 
             return foreground_contours, hole_contours
-        
+        print(self.level_dim)
+        print(seg_level)
         img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
         print(img.shape)
         sadvf
