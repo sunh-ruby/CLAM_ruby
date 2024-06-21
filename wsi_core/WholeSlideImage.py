@@ -141,7 +141,11 @@ class WholeSlideImage(object):
 
             return foreground_contours, hole_contours
         if self.name.startswith('162'):
-            seg_level = 0
+            # save a very low resolution image for debugging
+            lowset_level = 0
+            low_res_img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
+            print(low_res_img.shape)
+            asdfv
         img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
