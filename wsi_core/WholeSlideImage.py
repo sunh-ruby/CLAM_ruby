@@ -153,7 +153,7 @@ class WholeSlideImage(object):
         # save the img_otsu for debugging
         cv2.imwrite('img_otsu.png', img_otsu)
         
-        dsvf
+        
         # Morphological closing
         if close > 0:
             kernel = np.ones((close, close), np.uint8)
