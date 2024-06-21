@@ -278,7 +278,7 @@ if __name__ == '__main__':
 
 	seg_params = {'seg_level': -1, 'sthresh': 6, 'mthresh': 7, 'close': 4, 'use_otsu': False,
 				  'keep_ids': 'none', 'exclude_ids': 'none'}
-	filter_params = {'a_t':100, 'a_h': 16, 'max_n_holes':8}
+	filter_params = {'a_t':50, 'a_h': 16, 'max_n_holes':100}
 	vis_params = {'vis_level': -1, 'line_thickness': 250}
 	patch_params = {'use_padding': True, 'contour_fn': 'four_pt'}
     
