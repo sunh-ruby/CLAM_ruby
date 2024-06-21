@@ -140,11 +140,7 @@ class WholeSlideImage(object):
                 hole_contours.append(filtered_holes)
 
             return foreground_contours, hole_contours
-        print(self.level_dim)
-        print(seg_level)
         img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
-        print(img.shape)
-        sadvf
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
         
@@ -154,7 +150,10 @@ class WholeSlideImage(object):
             _, img_otsu = cv2.threshold(img_med, 0, sthresh_up, cv2.THRESH_OTSU+cv2.THRESH_BINARY)
         else:
             _, img_otsu = cv2.threshold(img_med, sthresh, sthresh_up, cv2.THRESH_BINARY)
-
+        # save the img_otsu for debugging
+        cv2.imwrite('img_otsu.png', img_otsu)
+        
+        dsvf
         # Morphological closing
         if close > 0:
             kernel = np.ones((close, close), np.uint8)
