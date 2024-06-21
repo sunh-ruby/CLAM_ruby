@@ -151,7 +151,7 @@ class WholeSlideImage(object):
         else:
             _, img_otsu = cv2.threshold(img_med, sthresh, sthresh_up, cv2.THRESH_BINARY)
         # save the img_otsu for debugging
-        cv2.imwrite('img_otsu.png', img_otsu)
+        cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
         
         
         # Morphological closing
