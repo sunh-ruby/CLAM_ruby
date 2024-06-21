@@ -157,7 +157,10 @@ class WholeSlideImage(object):
         # Morphological closing
         if close > 0:
             kernel = np.ones((close, close), np.uint8)
-            img_otsu = cv2.morphologyEx(img_otsu, cv2.MORPH_CLOSE, kernel)                 
+            img_otsu = cv2.morphologyEx(img_otsu, cv2.MORPH_CLOSE, kernel) 
+        # save the img_otsu_morph for debugging
+        cv2.imwrite(f"img_otsu_morph_{self.name}.png", img_otsu)
+                        
 
         scale = self.level_downsamples[seg_level]
         scaled_ref_patch_area = int(ref_patch_size**2 / (scale[0] * scale[1]))
