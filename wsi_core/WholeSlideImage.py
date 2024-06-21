@@ -142,11 +142,11 @@ class WholeSlideImage(object):
             return foreground_contours, hole_contours
         if self.name.startswith('162'):
             # save a very low resolution image for debugging
-            lowset_level = 1
+            lowset_level = 0
             print( self.level_dim)
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
             # convert the image to 16 times smaller
-            low_res_img = cv2.resize(low_res_img, (0,0), fx=1/4, fy=1/4)
+            low_res_img = cv2.resize(low_res_img, (0,0), fx=1/16, fy=1/16)
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
             low_res_img = low_res_img[:,:,:3]
