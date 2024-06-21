@@ -143,6 +143,7 @@ class WholeSlideImage(object):
         if self.name.startswith('162'):
             # save a very low resolution image for debugging
             lowset_level = 0
+            print( self.level_dim)
             low_res_img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
             print(low_res_img.shape)
             asdfv
