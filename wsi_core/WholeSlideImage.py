@@ -168,7 +168,7 @@ class WholeSlideImage(object):
         filter_params['a_t'] = filter_params['a_t'] * scaled_ref_patch_area
         filter_params['a_h'] = filter_params['a_h'] * scaled_ref_patch_area
         for i in range(3):
-            kernel = np.ones((5,5),np.uint8)
+            kernel = np.ones((10,10),np.uint8)
             img_otsu = cv2.dilate(img_otsu, kernel, iterations = 1)
         
         # Find and filter contours
