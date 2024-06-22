@@ -153,6 +153,7 @@ class WholeSlideImage(object):
             black_pixels = np.sum(thresh == 0)
             total_pixels = thresh.size
             black_pixel_percentage = (black_pixels / total_pixels) * 100
+            print(f"Black pixel percentage: {black_pixel_percentage}%")
             if black_pixel_percentage>20:
                 assert False, f"The image is not read properly, there are {black_pixel_percentage}% black pixels"
             
