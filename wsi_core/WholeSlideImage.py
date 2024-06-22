@@ -142,7 +142,7 @@ class WholeSlideImage(object):
             return foreground_contours, hole_contours
         if self.name.startswith('162'):
             # save a very low resolution image for debugging
-            lowset_level = 3
+            lowset_level = 2
             print( self.level_dim)
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
 
@@ -155,18 +155,14 @@ class WholeSlideImage(object):
             black_pixel_percentage = (black_pixels / total_pixels) * 100
             print(f"Black pixel percentage: {black_pixel_percentage}%")
             if black_pixel_percentage>20:
-                assert False, f"The image is not read properly, there are {black_pixel_percentage}% black pixels"
-            
-
-
+                lowset_level = 0
+                low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
+                low_res_img = cv2.resize(low_res_img, (0,0), fx=1/16, fy=1/16)
             # convert the image to 16 times smaller
-            #low_res_img = cv2.resize(low_res_img, (0,0), fx=1/16, fy=1/16)
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
             low_res_img = low_res_img[:,:,:3]
             cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
-            print(low_res_img.shape)
-            asdfv
         img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
