@@ -146,7 +146,7 @@ class WholeSlideImage(object):
             print( self.level_dim)
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
 
-            b_n_w = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(gray, 1, 255, cv2.THRESH_BINARY)
             # Calculate the percentage of black pixels
