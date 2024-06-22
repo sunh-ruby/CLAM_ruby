@@ -146,7 +146,7 @@ class WholeSlideImage(object):
             print( self.level_dim)
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
             # convert the image to 16 times smaller
-            low_res_img = cv2.resize(low_res_img, (0,0), fx=1/16, fy=1/16)
+            #low_res_img = cv2.resize(low_res_img, (0,0), fx=1/16, fy=1/16)
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
             low_res_img = low_res_img[:,:,:3]
