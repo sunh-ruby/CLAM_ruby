@@ -154,7 +154,7 @@ class WholeSlideImage(object):
             total_pixels = thresh.size
             black_pixel_percentage = (black_pixels / total_pixels) * 100
             if black_pixel_percentage>20:
-                assert False, "The image is not read properly, there are a significant number of black pixels"
+                assert False, f"The image is not read properly, there are {black_pixel_percentage}% black pixels"
             
 
 
