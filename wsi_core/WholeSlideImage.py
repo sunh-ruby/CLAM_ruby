@@ -168,6 +168,7 @@ class WholeSlideImage(object):
                 # Calculate the percentage of black pixels
                 black_pixels = np.sum(thresh <= 10)
                 img = low_res_img.copy()
+                black_background_mask = b_n_w <= 10
 
             
             # convert the image to 16 times smaller
