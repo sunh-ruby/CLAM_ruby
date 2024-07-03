@@ -140,35 +140,32 @@ class WholeSlideImage(object):
                 hole_contours.append(filtered_holes)
 
             return foreground_contours, hole_contours
-        if self.name.startswith('162'):
-            # save a very low resolution image for debugging
-            lowset_level = 2
-            print( self.level_dim)
-            low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
 
+        lowset_level = 2
+        low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
+        b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
+        # Apply thresholding to detect large uniform areas
+        _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
+        # Calculate the percentage of black pixels
+        black_pixels = np.sum(thresh <= 10)
+        total_pixels = thresh.size
+        black_pixel_percentage = (black_pixels / total_pixels) * 100
+        print(f"Black pixel percentage: {black_pixel_percentage}%")
+
+        black_background_mask = b_n_w <= 10
+            
+        #raise NotImplementedError("Stop here")
+        if black_pixel_percentage>20:
+            lowset_level = 3
+            low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
+            low_res_img = cv2.resize(low_res_img, (0,0), fx=4, fy=4)
             b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
             # Calculate the percentage of black pixels
-            black_pixels = np.sum(thresh <= 10)
-            total_pixels = thresh.size
-            black_pixel_percentage = (black_pixels / total_pixels) * 100
-            print(f"Black pixel percentage: {black_pixel_percentage}%")
-
-            black_background_mask = b_n_w <= 10
-            
-            #raise NotImplementedError("Stop here")
-            if black_pixel_percentage>20:
-                lowset_level = 3
-                low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
-                low_res_img = cv2.resize(low_res_img, (0,0), fx=4, fy=4)
-                b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
-                # Apply thresholding to detect large uniform areas
-                _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
-                # Calculate the percentage of black pixels
-                black_pixels = np.sum(thresh <= 50)
-                img = low_res_img.copy()
-                black_background_mask = b_n_w <= 50
+            black_pixels = np.sum(thresh <= 50)
+            img = low_res_img.copy()
+            black_background_mask = b_n_w <= 50
 
             
             # convert the image to 16 times smaller
