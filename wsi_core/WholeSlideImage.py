@@ -164,7 +164,10 @@ class WholeSlideImage(object):
             #raise NotImplementedError("Stop here")
             lowset_level = 3
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
-            low_res_img = cv2.resize(low_res_img, (0,0), fx=4, fy=4)
+            # checdk what's the scale difference between the 2 and 3
+            ratio = self.level_downsamples[lowset_level][0] / self.level_downsamples[lowset_level-1][0]
+            ratio = int(np.round(ratio))
+            low_res_img = cv2.resize(low_res_img, (0,0), fx=ratio, fy=ratio)
             b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
