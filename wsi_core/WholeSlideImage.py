@@ -201,8 +201,6 @@ class WholeSlideImage(object):
         
         # Find and filter contours
         contours, hierarchy = cv2.findContours(img_otsu, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE) # Find contours 
-        # filter the contours that are less than 100 pixels
-        contours, hierarchy = [contour for contour in contours if cv2.contourArea(contour) > 100], [hier for hier, contour in zip(hierarchy[0], contours) if cv2.contourArea(contour) > 100]
 
         # save the contours for debugging
         cv2.drawContours(img, contours, -1, (0,255,0), 3)
