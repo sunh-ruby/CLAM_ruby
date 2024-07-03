@@ -167,6 +167,7 @@ class WholeSlideImage(object):
                 _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
                 # Calculate the percentage of black pixels
                 black_pixels = np.sum(thresh <= 10)
+                img = low_res_img.copy()
 
             
             # convert the image to 16 times smaller
