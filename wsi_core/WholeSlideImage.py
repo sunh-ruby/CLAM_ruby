@@ -152,7 +152,6 @@ class WholeSlideImage(object):
         black_pixel_percentage = (black_pixels / total_pixels) * 100
         print(f"Black pixel percentage: {black_pixel_percentage}%")
 
-        black_background_mask = b_n_w <= 10
             
         #raise NotImplementedError("Stop here")
         if black_pixel_percentage>20:
@@ -172,11 +171,10 @@ class WholeSlideImage(object):
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
             # Calculate the percentage of black pixels
-            black_pixels = np.sum(thresh <= 50)
+            black_pixels = np.sum(thresh <= 0)
             img = low_res_img.copy()
             black_pixel_percentage = (black_pixels / total_pixels) * 100
             assert black_pixel_percentage < 20, f"Black pixel percentage is {black_pixel_percentage}%, the image is not read properly"
-            black_background_mask = b_n_w <= 50
 
             
             # convert the image to 16 times smaller
@@ -190,9 +188,7 @@ class WholeSlideImage(object):
             b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
-            # Calculate the percentage of black pixels
-            black_pixels = np.sum(thresh <=50)
-            black_background_mask = b_n_w <= 50
+
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
         
@@ -255,7 +251,8 @@ class WholeSlideImage(object):
         print("check this value, level dim", self.level_dim)
         downsample = self.level_downsamples[vis_level]
         scale = [1/downsample[0], 1/downsample[1]]
-        
+        print(top_left, bot_right)
+        raise NotImplementedError("Stop here")  
         if top_left is not None and bot_right is not None:
             top_left = tuple(top_left)
             bot_right = tuple(bot_right)
