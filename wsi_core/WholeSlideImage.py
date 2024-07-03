@@ -777,6 +777,6 @@ class WholeSlideImage(object):
         print('detected {}/{} of region as tissue'.format(tissue_mask.sum(), tissue_mask.size))
         return tissue_mask
 
-
+# python create_patches_fp.py --source ../../Data/test_slides/ --save_dir temp --patch_size 256 --seg --patch --stitch
 
 
