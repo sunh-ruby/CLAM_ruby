@@ -162,7 +162,13 @@ class WholeSlideImage(object):
                 lowset_level = 3
                 low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
                 low_res_img = cv2.resize(low_res_img, (0,0), fx=4, fy=4)
-            print(low_res_img.shape)
+                b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
+                # Apply thresholding to detect large uniform areas
+                _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
+                # Calculate the percentage of black pixels
+                black_pixels = np.sum(thresh <= 10)
+
+            
             # convert the image to 16 times smaller
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
@@ -171,6 +177,12 @@ class WholeSlideImage(object):
             cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
         else:
             img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
+            b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            # Apply thresholding to detect large uniform areas
+            _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
+            # Calculate the percentage of black pixels
+            black_pixels = np.sum(thresh <= 10)
+            black_background_mask = b_n_w <= 10
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
         
