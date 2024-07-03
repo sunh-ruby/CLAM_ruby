@@ -252,7 +252,7 @@ class WholeSlideImage(object):
         downsample = self.level_downsamples[vis_level]
         scale = [1/downsample[0], 1/downsample[1]]
         print(top_left, bot_right)
-        raise NotImplementedError("Stop here")  
+        
         if top_left is not None and bot_right is not None:
             top_left = tuple(top_left)
             bot_right = tuple(bot_right)
@@ -263,7 +263,8 @@ class WholeSlideImage(object):
             region_size = self.level_dim[vis_level]
 
         img = np.array(self.wsi.read_region(top_left, vis_level, region_size).convert("RGB"))
-        
+        print(view_slide_only)
+        raise NotImplementedError("Stop here")  
         if not view_slide_only:
             offset = tuple(-(np.array(top_left) * scale).astype(int))
             line_thickness = int(line_thickness * math.sqrt(scale[0] * scale[1]))
