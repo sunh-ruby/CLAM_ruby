@@ -232,6 +232,7 @@ class WholeSlideImage(object):
         if filter_params: foreground_contours, hole_contours = _filter_contours(contours, hierarchy, filter_params)  # Necessary for filtering out artifacts
 
         self.contours_tissue = self.scaleContourDim(foreground_contours, scale)
+        self.harry_image_dim = img.shape
         self.holes_tissue = self.scaleHolesDim(hole_contours, scale)
 
         #exclude_ids = [0,7,9]
@@ -267,6 +268,9 @@ class WholeSlideImage(object):
         if not view_slide_only:
             offset = tuple(-(np.array(top_left) * scale).astype(int))
             line_thickness = int(line_thickness * math.sqrt(scale[0] * scale[1]))
+            print("current image size", img.shape)
+            print('my image size', self.harry_image_dim)
+            assert img.shape == self.harry_image_dim, "The image size is not the same as the harry image size"
             if self.contours_tissue is not None and seg_display:
                 if not number_contours:
                     cv2.drawContours(img, self.scaleContourDim(self.contours_tissue, scale), 
