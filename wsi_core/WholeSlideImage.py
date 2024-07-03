@@ -166,9 +166,9 @@ class WholeSlideImage(object):
                 # Apply thresholding to detect large uniform areas
                 _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
                 # Calculate the percentage of black pixels
-                black_pixels = np.sum(thresh <= 10)
+                black_pixels = np.sum(thresh <= 30)
                 img = low_res_img.copy()
-                black_background_mask = b_n_w <= 10
+                black_background_mask = b_n_w <= 30
 
             
             # convert the image to 16 times smaller
@@ -183,8 +183,8 @@ class WholeSlideImage(object):
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
             # Calculate the percentage of black pixels
-            black_pixels = np.sum(thresh <= 10)
-            black_background_mask = b_n_w <= 10
+            black_pixels = np.sum(thresh <= 30)
+            black_background_mask = b_n_w <= 30
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
         
