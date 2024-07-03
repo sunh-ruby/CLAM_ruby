@@ -249,6 +249,7 @@ class WholeSlideImage(object):
                     line_thickness=250, max_size=None, top_left=None, bot_right=None, custom_downsample=1, view_slide_only=False,
                     number_contours=False, seg_display=True, annot_display=True):
         print("check this value, level downsample", self.level_downsamples)
+        print("check this value, level dim", self.level_dim)
         downsample = self.level_downsamples[vis_level]
         scale = [1/downsample[0], 1/downsample[1]]
         
