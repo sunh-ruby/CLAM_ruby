@@ -156,9 +156,12 @@ class WholeSlideImage(object):
             
         #raise NotImplementedError("Stop here")
         if black_pixel_percentage>20:
+            cv2.imwrite(f"wrong_img_{self.name}.png", low_res_img)
+
             # give a warning that the image is not read properly at this resolution
             Warning("The image is not read properly at the {lowset_level} resolution. The black pixel percentage is {black_pixel_percentage}%")
             Warning("Try to read the image at a lower resolution, e.g. lowset_level = 3")
+            raise NotImplementedError("Stop here")
             lowset_level = 3
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
             low_res_img = cv2.resize(low_res_img, (0,0), fx=4, fy=4)
