@@ -150,10 +150,12 @@ class WholeSlideImage(object):
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
             # Calculate the percentage of black pixels
-            black_pixels = np.sum(thresh == 0)
+            black_pixels = np.sum(thresh <= 10)
             total_pixels = thresh.size
             black_pixel_percentage = (black_pixels / total_pixels) * 100
             print(f"Black pixel percentage: {black_pixel_percentage}%")
+
+            black_background_mask = b_n_w <= 10
             
             #raise NotImplementedError("Stop here")
             if black_pixel_percentage>20:
@@ -186,9 +188,13 @@ class WholeSlideImage(object):
         if close > 0:
             kernel = np.ones((close, close), np.uint8)
             img_otsu = cv2.morphologyEx(img_otsu, cv2.MORPH_CLOSE, kernel) 
+        # get rid of the pixel of the black background
+        img_otsu[black_background_mask] = 0
         # save the img_otsu_morph for debugging
         cv2.imwrite(f"img_otsu_morph_{self.name}.png", img_otsu)
-                        
+
+        
+                  
 
         scale = self.level_downsamples[seg_level]
         scaled_ref_patch_area = int(ref_patch_size**2 / (scale[0] * scale[1]))
