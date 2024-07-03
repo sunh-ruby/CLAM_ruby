@@ -162,7 +162,7 @@ class WholeSlideImage(object):
             #Warning("Try to read the image at a lower resolution, e.g. lowset_level = 3")
             #raise NotImplementedError("Stop here")
             lowset_level = 3
-            low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level])).convert("RGB")
+            low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]).convert("RGB"))
             # checdk what's the scale difference between the 2 and 3
             ratio = self.level_downsamples[lowset_level][0] / self.level_downsamples[lowset_level-1][0]
             ratio = int(np.round(ratio))
