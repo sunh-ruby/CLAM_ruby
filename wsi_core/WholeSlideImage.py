@@ -263,7 +263,7 @@ class WholeSlideImage(object):
 
         img = np.array(self.wsi.read_region(top_left, vis_level, region_size).convert("RGB"))
         print(view_slide_only)
-        raise NotImplementedError("Stop here")  
+        
         if not view_slide_only:
             offset = tuple(-(np.array(top_left) * scale).astype(int))
             line_thickness = int(line_thickness * math.sqrt(scale[0] * scale[1]))
