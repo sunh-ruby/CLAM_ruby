@@ -154,16 +154,21 @@ class WholeSlideImage(object):
             total_pixels = thresh.size
             black_pixel_percentage = (black_pixels / total_pixels) * 100
             print(f"Black pixel percentage: {black_pixel_percentage}%")
+            
+            #raise NotImplementedError("Stop here")
             if black_pixel_percentage>20:
-                lowset_level = 0
+                lowset_level = 3
                 low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
-                low_res_img = cv2.resize(low_res_img, (0,0), fx=1/16, fy=1/16)
+                low_res_img = cv2.resize(low_res_img, (0,0), fx=4, fy=4)
+            print(low_res_img.shape)
             # convert the image to 16 times smaller
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
             low_res_img = low_res_img[:,:,:3]
+            img = low_res_img.copy()
             cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
-        img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
+        else:
+            img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
         
@@ -213,7 +218,7 @@ class WholeSlideImage(object):
 
         self.contours_tissue = [self.contours_tissue[i] for i in contour_ids]
         self.holes_tissue = [self.holes_tissue[i] for i in contour_ids]
-
+        
     def visWSI(self, vis_level=0, color = (0,255,0), hole_color = (0,0,255), annot_color=(255,0,0), 
                     line_thickness=250, max_size=None, top_left=None, bot_right=None, custom_downsample=1, view_slide_only=False,
                     number_contours=False, seg_display=True, annot_display=True):

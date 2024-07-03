@@ -1,0 +1,5 @@
+slide_id,process,status,seg_level,sthresh,mthresh,close,use_otsu,keep_ids,exclude_ids,a_t,a_h,max_n_holes,vis_level,line_thickness,use_padding,contour_fn
+162bc9165520dde0caebbb1f33b3.svs,0,already_exist,-1,6,7,4,False,none,none,50.0,16.0,100,-1,250,True,four_pt
+5b9dad6167b0db60b0f98d9b0fd8.svs,0,already_exist,-1,6,7,4,False,none,none,50.0,16.0,100,-1,250,True,four_pt
+7de81ed73b1d34daa2d4aeed3c9a.svs,0,already_exist,-1,6,7,4,False,none,none,50.0,16.0,100,-1,250,True,four_pt
+b33e4e032c5df9157d3d7b448e1d.svs,0,already_exist,-1,6,7,4,False,none,none,50.0,16.0,100,-1,250,True,four_pt
