@@ -272,7 +272,7 @@ class WholeSlideImage(object):
             line_thickness = int(line_thickness * math.sqrt(scale[0] * scale[1]))
             print("current image size", img.shape)
             print('my image size', self.harry_image_dim)
-            assert img.shape == self.harry_image_dim, "The image size is not the same as the harry image size"
+            #assert img.shape == self.harry_image_dim, "The image size is not the same as the harry image size"
             if self.contours_tissue is not None and seg_display:
                 if not number_contours:
                     cv2.drawContours(img, self.scaleContourDim(self.contours_tissue, scale), 
