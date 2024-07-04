@@ -213,9 +213,9 @@ class WholeSlideImage(object):
 
         
                   
-
-        scale = int(self.level_downsamples[seg_level]/ratio)
-
+        # tuple / int 
+        scale = (int(self.level_downsamples[seg_level][0]/ratio), int(self.level_downsamples[seg_level][1]/ratio))
+        
         scaled_ref_patch_area = int(ref_patch_size**2 / (scale[0] * scale[1]))
         filter_params = filter_params.copy()
         filter_params['a_t'] = filter_params['a_t'] * scaled_ref_patch_area
