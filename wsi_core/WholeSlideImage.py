@@ -187,6 +187,7 @@ class WholeSlideImage(object):
             b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
+            ratio = 1
 
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
@@ -213,9 +214,8 @@ class WholeSlideImage(object):
         
                   
 
-        scale = self.level_downsamples[seg_level]
-        print("scale", scale)
-        safdvg
+        scale = int(self.level_downsamples[seg_level]/ratio)
+
         scaled_ref_patch_area = int(ref_patch_size**2 / (scale[0] * scale[1]))
         filter_params = filter_params.copy()
         filter_params['a_t'] = filter_params['a_t'] * scaled_ref_patch_area
