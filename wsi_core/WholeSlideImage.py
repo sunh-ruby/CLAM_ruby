@@ -155,7 +155,7 @@ class WholeSlideImage(object):
             
         #raise NotImplementedError("Stop here")
         if black_pixel_percentage>20:
-            cv2.imwrite(f"wrong_img_{self.name}.png", low_res_img)
+            #cv2.imwrite(f"wrong_img_{self.name}.png", low_res_img)
 
             # give a warning that the image is not read properly at this resolution
             #Warning("The image is not read properly at the {lowset_level} resolution. The black pixel percentage is {black_pixel_percentage}%")
@@ -166,7 +166,9 @@ class WholeSlideImage(object):
             # checdk what's the scale difference between the 2 and 3
             ratio = self.level_downsamples[lowset_level][0] / self.level_downsamples[lowset_level-1][0]
             ratio = int(np.round(ratio))
+            print(f"THe ratio difference between the level 2 and level 3 is : {ratio}")
             low_res_img = cv2.resize(low_res_img, (0,0), fx=ratio, fy=ratio)
+            print(f"The dimention is the contour should also be: {low_res_img.shape}")
             b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_RGB2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
@@ -181,7 +183,7 @@ class WholeSlideImage(object):
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
             img = low_res_img.copy()
-            cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
+            #cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
         else:
             img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
             b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -199,7 +201,7 @@ class WholeSlideImage(object):
         else:
             _, img_otsu = cv2.threshold(img_med, sthresh, sthresh_up, cv2.THRESH_BINARY)
         # save the img_otsu for debugging
-        cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
+        #cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
         
         
         # Morphological closing
@@ -213,9 +215,12 @@ class WholeSlideImage(object):
 
         
                   
-        # tuple / int 
-        scale = (int(self.level_downsamples[seg_level][0]/ratio), int(self.level_downsamples[seg_level][1]/ratio))
+        # 
+        scale = (int(self.level_downsamples[lowset_level][0]), int(self.level_downsamples[lowset_level][1]))
+        print(f"Before the resizing the image and contours should be scale {scale} times to come back")
         
+        print('*************')
+        #raise NotImplementedError("stop here for now")
         scaled_ref_patch_area = int(ref_patch_size**2 / (scale[0] * scale[1]))
         filter_params = filter_params.copy()
         filter_params['a_t'] = filter_params['a_t'] * scaled_ref_patch_area
@@ -228,11 +233,11 @@ class WholeSlideImage(object):
         contours, hierarchy = cv2.findContours(img_otsu, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE) # Find contours 
 
         # save the contours for debugging
-        cv2.drawContours(img, contours, -1, (0,255,0), 3)
-        cv2.imwrite(f"contours_{self.name}.png", img)
+        #cv2.drawContours(img, contours, -1, (0,255,0), 3)
+        #cv2.imwrite(f"contours_{self.name}.png", img)
         hierarchy = np.squeeze(hierarchy, axis=(0,))[:, 2:]
         if filter_params: foreground_contours, hole_contours = _filter_contours(contours, hierarchy, filter_params)  # Necessary for filtering out artifacts
-
+        scale = (scale[0]/ratio, scale[1]/ratio)
         self.contours_tissue = self.scaleContourDim(foreground_contours, scale)
         self.harry_image_dim = img.shape
         self.holes_tissue = self.scaleHolesDim(hole_contours, scale)
@@ -252,7 +257,9 @@ class WholeSlideImage(object):
         print("check this value, level downsample", self.level_downsamples)
         print("check this value, level dim", self.level_dim)
         downsample = self.level_downsamples[vis_level]
+        print(downsample)
         scale = [1/downsample[0], 1/downsample[1]]
+        print(scale)
         print(top_left, bot_right)
         
         if top_left is not None and bot_right is not None:
@@ -263,6 +270,7 @@ class WholeSlideImage(object):
         else:
             top_left = (0,0)
             region_size = self.level_dim[vis_level]
+        print(region_size)
 
         img = np.array(self.wsi.read_region(top_left, vis_level, region_size).convert("RGB"))
         print(view_slide_only)
@@ -274,6 +282,7 @@ class WholeSlideImage(object):
             print('my image size', self.harry_image_dim)
             #assert img.shape == self.harry_image_dim, "The image size is not the same as the harry image size"
             if self.contours_tissue is not None and seg_display:
+                print(f"current scale :{scale}")
                 if not number_contours:
                     cv2.drawContours(img, self.scaleContourDim(self.contours_tissue, scale), 
                                      -1, color, line_thickness, lineType=cv2.LINE_8, offset=offset)
@@ -306,7 +315,7 @@ class WholeSlideImage(object):
         if max_size is not None and (w > max_size or h > max_size):
             resizeFactor = max_size/w if w > h else max_size/h
             img = img.resize((int(w*resizeFactor), int(h*resizeFactor)))
-       
+        #raise NotImplementedError("Stop here")
         return img
 
 
