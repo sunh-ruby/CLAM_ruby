@@ -11,7 +11,7 @@ __pycache__/
 
 # folder
 temp
-
+temp*
 
 # C extensions
 *.so
@@ -25,6 +25,7 @@ events.out*
 *.ckpt
 *logs
 *yaml
+*.h5
 # Distribution / packaging
 .Python
 build/
