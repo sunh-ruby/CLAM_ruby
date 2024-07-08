@@ -182,10 +182,9 @@ class WholeSlideImage(object):
             # convert the image to 16 times smaller
             # save the low_res_img for debugging
             # convert (2925, 1535, 4) to (2925, 1535, 3)
-            img = low_res_img.copy()
             #cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
         else:
-            img = np.array(self.wsi.read_region((0,0), seg_level, self.level_dim[seg_level]))
+            img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
             b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
@@ -211,7 +210,7 @@ class WholeSlideImage(object):
         # get rid of the pixel of the black background
         #img_otsu[black_background_mask] = 0
         # save the img_otsu_morph for debugging
-        cv2.imwrite(f"img_otsu_morph_{self.name}.png", img_otsu)
+        #cv2.imwrite(f"img_otsu_morph_{self.name}.png", img_otsu)
 
         
                   
@@ -219,7 +218,7 @@ class WholeSlideImage(object):
         scale = (int(self.level_downsamples[lowset_level][0]), int(self.level_downsamples[lowset_level][1]))
         print(f"Before the resizing the image and contours should be scale {scale} times to come back")
         
-        print('*************')
+
         #raise NotImplementedError("stop here for now")
         scaled_ref_patch_area = int(ref_patch_size**2 / (scale[0] * scale[1]))
         filter_params = filter_params.copy()
@@ -239,6 +238,7 @@ class WholeSlideImage(object):
         if filter_params: foreground_contours, hole_contours = _filter_contours(contours, hierarchy, filter_params)  # Necessary for filtering out artifacts
         scale = (scale[0]/ratio, scale[1]/ratio)
         self.contours_tissue = self.scaleContourDim(foreground_contours, scale)
+
         self.harry_image_dim = img.shape
         self.holes_tissue = self.scaleHolesDim(hole_contours, scale)
 
