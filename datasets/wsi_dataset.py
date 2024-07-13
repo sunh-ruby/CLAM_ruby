@@ -15,6 +15,14 @@ def default_transforms(mean = (0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)):
                          transforms.Normalize(mean = mean, std = std)])
     return t
 
+def path_transform(mean=(0.5642, 0.5026, 0.6960), std=(0.2724,
+ 0.2838, 0.2167)):
+    t = transforms.Compose(
+                        [transforms.ToTensor(),
+                         transforms.Normalize(mean = mean, std = std)])
+    return t
+
+
 def get_contour_check_fn(contour_fn='four_pt_hard', cont=None, ref_patch_size=None, center_shift=None):
     if contour_fn == 'four_pt_hard':
         cont_check_fn = isInContourV3_Hard(contour=cont, patch_size=ref_patch_size, center_shift=center_shift)

@@ -35,6 +35,29 @@ def eval_transforms(pretrained=False):
 
 	return trnsfrms_val
 
+def uni_transforms(pretrained=False):
+	mean = (0.485, 0.456, 0.406)
+	std = (0.229, 0.224, 0.225)
+
+	
+	trnsfrms_val = transforms.Compose(
+					[
+					transforms.Resize(224),
+					 transforms.ToTensor(),
+					 transforms.Normalize(mean = mean, std = std)
+					]
+				)
+
+	return trnsfrms_val
+
+
+def path_transform(mean=(0.5642, 0.5026, 0.6960), std=(0.2724,
+ 0.2838, 0.2167)):
+    t = transforms.Compose(
+                        [transforms.ToTensor(),
+                         transforms.Normalize(mean = mean, std = std)])
+    return t
+
 class Whole_Slide_Bag(Dataset):
 	def __init__(self,
 		file_path,

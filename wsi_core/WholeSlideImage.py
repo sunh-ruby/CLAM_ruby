@@ -140,18 +140,26 @@ class WholeSlideImage(object):
                 hole_contours.append(filtered_holes)
 
             return foreground_contours, hole_contours
-
-        lowset_level = 2
+        batch3_4 = True
+        if batch3_4:
+            lowset_level = 7
+        else:
+            lowset_level = 2
         low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
+
         b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
         # Apply thresholding to detect large uniform areas
         _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
+        #print(thresh.shape)
         # Calculate the percentage of black pixels
         black_pixels = np.sum(thresh == 0)
+        black_mask = (thresh == 0).astype(np.uint8) * 255
+        
         total_pixels = thresh.size
         black_pixel_percentage = (black_pixels / total_pixels) * 100
         print(f"Black pixel percentage: {black_pixel_percentage}%")
 
+    
             
         #raise NotImplementedError("Stop here")
         if black_pixel_percentage>20:
@@ -161,7 +169,7 @@ class WholeSlideImage(object):
             #Warning("The image is not read properly at the {lowset_level} resolution. The black pixel percentage is {black_pixel_percentage}%")
             #Warning("Try to read the image at a lower resolution, e.g. lowset_level = 3")
             #raise NotImplementedError("Stop here")
-            lowset_level = 3
+            lowset_level +=1
             low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]).convert("RGB"))
             # checdk what's the scale difference between the 2 and 3
             ratio = self.level_downsamples[lowset_level][0] / self.level_downsamples[lowset_level-1][0]
@@ -175,6 +183,8 @@ class WholeSlideImage(object):
             # Calculate the percentage of black pixels
             black_pixels = np.sum(thresh <= 0)
             img = low_res_img.copy()
+            
+        
             black_pixel_percentage = (black_pixels / total_pixels) * 100
             assert black_pixel_percentage < 20, f"Black pixel percentage is {black_pixel_percentage}%, the image is not read properly"
 
@@ -185,6 +195,36 @@ class WholeSlideImage(object):
             #cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
         else:
             img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
+            batch3_4 = True
+            if batch3_4:
+                if img.shape[2] == 4:
+                    # Convert RGBA to BGR by discarding the alpha channel
+                    img = img[:, :, :3]  # Keep only the first three channels
+                
+                mask = np.zeros(img.shape[:2], dtype=np.uint8)
+                mask[img[:, :, 0] < 30] = 255  # Assuming black pixels are very dark, threshold might need adjustment
+
+
+                # Ensure the mask is binary
+                _, mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
+
+                # Axpply inpainting
+                print("starting patining")
+                print(self.level_dim)
+                print(img.shape)
+                print(mask.shape)
+                try:
+
+                    img = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
+                    cv2.imwrite(f'inpainted_image_{self.name}.png', img)
+                except cv2.error as e:
+                    #print("Inpainting failed:", str(e))
+                    # Additional debugging information
+                    print(f"Image shape: {img.shape}, Image type: {img.dtype}")
+                    print(f"Mask shape: {mask.shape}, Mask type: {mask.dtype}")
+                    raise ValueError("Inpainting failed:", str(e))
+
+            #img =  cv2.inpaint(img, black_mask, 3, cv2.INPAINT_TELEA)
             b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             # Apply thresholding to detect large uniform areas
             _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
@@ -192,15 +232,18 @@ class WholeSlideImage(object):
 
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
+        if batch3_4:
+            # Apply histogram equalization to enhance contrast
+            img_med = cv2.equalizeHist(img_med)
+
         
-       
         # Thresholding
-        if use_otsu:
+        if use_otsu:    
             _, img_otsu = cv2.threshold(img_med, 0, sthresh_up, cv2.THRESH_OTSU+cv2.THRESH_BINARY)
         else:
             _, img_otsu = cv2.threshold(img_med, sthresh, sthresh_up, cv2.THRESH_BINARY)
         # save the img_otsu for debugging
-        #cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
+        cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
         
         
         # Morphological closing

@@ -12,7 +12,7 @@ parser.add_argument('--seed', type=int, default=1,
                     help='random seed (default: 1)')
 parser.add_argument('--k', type=int, default=10,
                     help='number of splits (default: 10)')
-parser.add_argument('--task', type=str, choices=['task_1_tumor_vs_normal', 'task_2_tumor_subtyping'])
+parser.add_argument('--task', type=str, choices=['task_1_tumor_vs_normal', 'task_2_tumor_subtyping',"task_3_biomarker", "task_4_cancer"])
 parser.add_argument('--val_frac', type=float, default= 0.1,
                     help='fraction of labels for validation (default: 0.1)')
 parser.add_argument('--test_frac', type=float, default= 0.1,
@@ -40,7 +40,24 @@ elif args.task == 'task_2_tumor_subtyping':
                             patient_strat= True,
                             patient_voting='maj',
                             ignore=[])
-
+elif args.task == 'task_3_biomarker':
+    args.n_classes=2
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv',
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'Detected':0, 'Not Detected':1},
+                            patient_strat=True,
+                            ignore=[])
+elif args.task == 'task_4_cancer':
+    args.n_classes=2
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '/home/harry/Documents/codes/CLAM_ruby/dataset_csv/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_cancer.csv',
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'not present':0, 'present':1},
+                            patient_strat=True,
+                            ignore=[])
 else:
     raise NotImplementedError
 

@@ -12,7 +12,7 @@ from scipy import stats
 from torch.utils.data import Dataset
 import h5py
 
-from utils.utils import generate_split, nth
+from utils.utils import generate_split, nth, generate_split_train_val_only
 
 def save_splits(split_datasets, column_keys, filename, boolean_style=False):
 	splits = [split_datasets[i].slide_data['slide_id'] for i in range(len(split_datasets))]
@@ -63,6 +63,7 @@ class Generic_WSI_Classification_Dataset(Dataset):
 		self.label_col = label_col
 
 		slide_data = pd.read_csv(csv_path)
+		slide_data['slide_id'] = [x.replace('.svs','') for x in slide_data['slide_id']]
 		slide_data = self.filter_df(slide_data, filter_dict)
 		slide_data = self.df_prep(slide_data, self.label_dict, ignore, self.label_col)
 
@@ -112,7 +113,7 @@ class Generic_WSI_Classification_Dataset(Dataset):
 	def df_prep(data, label_dict, ignore, label_col):
 		if label_col != 'label':
 			data['label'] = data[label_col].copy()
-
+        
 		mask = data['label'].isin(ignore)
 		data = data[~mask]
 		data.reset_index(drop=True, inplace=True)
@@ -163,7 +164,7 @@ class Generic_WSI_Classification_Dataset(Dataset):
 		else:
 			settings.update({'cls_ids' : self.slide_cls_ids, 'samples': len(self.slide_data)})
 
-		self.split_gen = generate_split(**settings)
+		self.split_gen = generate_split_train_val_only(**settings)
 
 	def set_splits(self,start_from=None):
 		if start_from:
@@ -297,7 +298,8 @@ class Generic_WSI_Classification_Dataset(Dataset):
 
 		assert len(np.intersect1d(self.train_ids, self.test_ids)) == 0
 		assert len(np.intersect1d(self.train_ids, self.val_ids)) == 0
-		assert len(np.intersect1d(self.val_ids, self.test_ids)) == 0
+		if not len(np.intersect1d(self.val_ids, self.test_ids)) == 0:
+			print('Warning! this is only for validation purpose, where the val and test are the same')
 
 		if return_descriptor:
 			return df

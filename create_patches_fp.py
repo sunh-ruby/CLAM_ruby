@@ -312,3 +312,4 @@ if __name__ == '__main__':
 											stitch= args.stitch,
 											patch_level=args.patch_level, patch = args.patch,
 											process_list = process_list, auto_skip=args.no_auto_skip)
+# python create_patches_fp.py --source /mnt/sda/proscia_b4/ --save_dir proscia_batch4 --patch_size 512 --seg --patch --stitc

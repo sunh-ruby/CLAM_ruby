@@ -20,6 +20,7 @@ proscia_batch1
 *.txt
 *.tsv
 events.out*
+hf_*
 # model weights
 *.pt
 *.ckpt

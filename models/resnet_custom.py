@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import torch
 import torch.nn.functional as F
-
+from collections import OrderedDict
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
            'resnet152']
 
@@ -14,6 +14,17 @@ model_urls = {
     'resnet101': 'https://download.pytorch.org/models/resnet101-5d3b4d8f.pth',
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
+
+def remove_data_parallel(old_state_dict):
+    new_state_dict = OrderedDict()
+
+    for k, v in old_state_dict.items():
+        
+        name = k[7:] # remove `module.`
+        
+        new_state_dict[name] = v
+    
+    return new_state_dict
 
 class Bottleneck_Baseline(nn.Module):
     expansion = 4
@@ -104,7 +115,6 @@ class ResNet_Baseline(nn.Module):
 
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
-
         return x
 
 def resnet50_baseline(pretrained=False):
@@ -117,9 +127,41 @@ def resnet50_baseline(pretrained=False):
         model = load_pretrained_weights(model, 'resnet50')
     return model
 
+
+class Myresnext50(nn.Module):
+    def __init__(self, my_pretrained_model, num_classes = 19):
+        super(Myresnext50, self).__init__()
+        self.pretrained = my_pretrained_model
+        self.my_new_layers = nn.Sequential(nn.Linear(1000, 100),
+                                           nn.ReLU(),
+                                           nn.Linear(100, num_classes))
+        self.num_classes = num_classes
+    
+    def forward(self, x):
+        x = self.pretrained(x)
+        x = self.my_new_layers(x)
+        
+        #pred = torch.sigmoid(x.reshape(x.shape[0], 1,self.num_classes))
+        pred = x#.reshape(x.shape[0], 1,self.num_classes)
+        
+        return pred
+
+def ResNeXt50_trained(pretrained=True):
+    resnext50_pretrained = torch.hub.load('pytorch/vision:v0.10.0', 'resnext50_32x4d')
+    My_model = Myresnext50(my_pretrained_model= resnext50_pretrained, num_classes = 2)
+    if pretrained:
+        ckpt_dir= "/home/harry/Documents/codes/PatchML/checkpoints_cancer_regions_pseudo_batch1and2/model_46_0.9528982812881118.pth"
+        checkpoint_PATH = ckpt_dir
+        checkpoint = torch.load(checkpoint_PATH)
+        checkpoint  = remove_data_parallel(checkpoint)
+        My_model.load_state_dict(checkpoint, strict=True)
+    return My_model.pretrained
+
+
 def load_pretrained_weights(model, name):
     pretrained_dict = model_zoo.load_url(model_urls[name])
     model.load_state_dict(pretrained_dict, strict=False)
     return model
 
-
+# /home/harry/Documents/codes/PatchML/checkpoints_cancer_regions_pseudo_batch1and2/model_46_0.9528982812881118.pth
+# my fav model 

@@ -6,15 +6,17 @@ import random
 import numpy as np
 import pdb
 import time
-from datasets.dataset_h5 import Dataset_All_Bags, Whole_Slide_Bag_FP
+from datasets.dataset_h5 import Dataset_All_Bags, Whole_Slide_Bag_FP, path_transform, eval_transforms, uni_transforms
 from torch.utils.data import DataLoader
-from models.resnet_custom import resnet50_baseline
+from models.resnet_custom import resnet50_baseline, ResNeXt50_trained
 import argparse
 from utils.utils import print_network, collate_features
 from utils.file_utils import save_hdf5
 from PIL import Image
 import h5py
 import openslide
+import timm
+
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
 def compute_w_loader(file_path, output_path, wsi, model,
@@ -32,7 +34,7 @@ def compute_w_loader(file_path, output_path, wsi, model,
 		target_patch_size: custom defined, rescaled image size before embedding
 	"""
 	dataset = Whole_Slide_Bag_FP(file_path=file_path, wsi=wsi, pretrained=pretrained, 
-		custom_downsample=custom_downsample, target_patch_size=target_patch_size)
+		custom_downsample=custom_downsample, target_patch_size=target_patch_size, custom_transforms= uni_transforms())
 	x, y = dataset[0]
 	kwargs = {'num_workers': 4, 'pin_memory': True} if device.type == "cuda" else {}
 	loader = DataLoader(dataset=dataset, batch_size=batch_size, **kwargs, collate_fn=collate_features)
@@ -48,6 +50,7 @@ def compute_w_loader(file_path, output_path, wsi, model,
 			batch = batch.to(device, non_blocking=True)
 			
 			features = model(batch)
+			#print(features.shape)
 			features = features.cpu().numpy()
 
 			asset_dict = {'features': features, 'coords': coords}
@@ -85,7 +88,9 @@ if __name__ == '__main__':
 	dest_files = os.listdir(os.path.join(args.feat_dir, 'pt_files'))
 
 	print('loading model checkpoint')
-	model = resnet50_baseline(pretrained=True)
+	#model = resnet50_baseline(pretrained= True)
+	#model = ResNeXt50_trained(pretrained= True)
+	model =  timm.create_model("hf-hub:MahmoodLab/UNI", pretrained=True, init_values=1e-5, dynamic_img_size=True)
 	model = model.to(device)
 	
 	# print_network(model)
@@ -125,4 +130,5 @@ if __name__ == '__main__':
 		torch.save(features, os.path.join(args.feat_dir, 'pt_files', bag_base+'.pt'))
 
 
-
+# CUDA_VISIBLE_DEVICES=0 python extract_features_fp.py --data_h5_dir proscia_batch1/ --data_slide_dir /mnt/sda/proscia/slides/ --csv_path proscia_batch1/process_list_autogen.csv --feat_dir proscia_batch1/ --batch_size 512 --slide_ext .svs
+# or nohup python extract_features_fp.py --data_h5_dir DATA_ROOT_DIR/proscia_batch1/ --data_slide_dir /mnt/sda/proscia/slides/ --csv_path DATA_ROOT_DIR/proscia_batch1/process_list_autogen.csv --feat_dir DATA_ROOT_DIR/proscia_batch1/ --batch_size 512 --slide_ext .svs &
