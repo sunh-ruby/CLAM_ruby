@@ -90,6 +90,8 @@ if __name__ == '__main__':
 	print('loading model checkpoint')
 	#model = resnet50_baseline(pretrained= True)
 	#model = ResNeXt50_trained(pretrained= True)
+	hf_token = "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"
+	os.environ["HF_TOKEN"] = hf_token
 	model =  timm.create_model("hf-hub:MahmoodLab/UNI", pretrained=True, init_values=1e-5, dynamic_img_size=True)
 	model = model.to(device)
 	
@@ -104,6 +106,10 @@ if __name__ == '__main__':
 		slide_id = bags_dataset[bag_candidate_idx].split(args.slide_ext)[0]
 		bag_name = slide_id+'.h5'
 		h5_file_path = os.path.join(args.data_h5_dir, 'patches', bag_name)
+		if not os.path.exists(h5_file_path):
+			print('skipped {}'.format(slide_id))
+			print('file not found: {}'.format(h5_file_path))
+			continue
 		slide_file_path = os.path.join(args.data_slide_dir, slide_id+args.slide_ext)
 		print('\nprogress: {}/{}'.format(bag_candidate_idx, total))
 		print(slide_id)
@@ -113,6 +119,7 @@ if __name__ == '__main__':
 			continue 
 
 		output_path = os.path.join(args.feat_dir, 'h5_files', bag_name)
+		
 		time_start = time.time()
 		wsi = openslide.open_slide(slide_file_path)
 		output_file_path = compute_w_loader(h5_file_path, output_path, wsi, 

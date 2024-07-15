@@ -140,11 +140,12 @@ class WholeSlideImage(object):
                 hole_contours.append(filtered_holes)
 
             return foreground_contours, hole_contours
-        batch3_4 = True
+        batch3_4 = False
         if batch3_4:
-            lowset_level = 7
+            lowset_level = 6
         else:
             lowset_level = 2
+
         low_res_img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
 
         b_n_w = cv2.cvtColor(low_res_img, cv2.COLOR_BGR2GRAY)
@@ -195,46 +196,68 @@ class WholeSlideImage(object):
             #cv2.imwrite(f"low_res_img_{self.name}.png", low_res_img)
         else:
             img = np.array(self.wsi.read_region((0,0), lowset_level, self.level_dim[lowset_level]))
-            batch3_4 = True
+
+            # cap the pixel value to 200
+            img = np.where(img > 200, 200, img)
+            # normalize to 0-255
+            img = cv2.normalize(img, None, 0, 255, cv2.NORM_MINMAX, cv2.CV_8U)
+
+
+        
+
+            dilated_mask = np.zeros_like(b_n_w)
             if batch3_4:
                 if img.shape[2] == 4:
                     # Convert RGBA to BGR by discarding the alpha channel
                     img = img[:, :, :3]  # Keep only the first three channels
                 
-                mask = np.zeros(img.shape[:2], dtype=np.uint8)
-                mask[img[:, :, 0] < 30] = 255  # Assuming black pixels are very dark, threshold might need adjustment
+                # Assuming 'img' is loaded
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                _, mask = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY_INV)  # Threshold to create a binary mask
+                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                # save the black segment for debugging
+                img_draw = img.copy()
+                
+
+                # create a new object to filter out the small contours
+                new_contours = []
+                for contour in contours:
+                    if cv2.contourArea(contour) > 1000:
+                        # make the contour even bigger
+                        contour = cv2.convexHull(contour)
+                        new_contours.append(contour)
+
+                        area = cv2.contourArea(contour)
+                        increase_area = area * 0.3  # 30% increase in area
+                        # Approximate the radius needed to increase area by 10%: Area = pi * r^2 -> r = sqrt(Area/pi)
+                        radius = np.sqrt(increase_area / np.pi)
+
+                        # Determine the kernel size, ensuring it's an odd number
+                        kernel_size = int(np.ceil(radius)) * 2 + 1  # Ensure kernel size is odd
+                        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+                        
+                        # Dilate the contour and draw it to the mask
+                        dilated_contour = cv2.dilate(cv2.drawContours(np.zeros_like(gray), [contour], -1, (255), -1), kernel)
+                        dilated_mask = cv2.bitwise_or(dilated_mask, dilated_contour)
+                    else:
+                        pass
+                # Draw the dilated contours
+                img_draw = img.copy()
+                cv2.drawContours(img_draw, new_contours, -1, (0, 255, 0), 3)
+                #cv2.imwrite(f"black_segment_{self.name}.png", img_draw)
+
+                
 
 
-                # Ensure the mask is binary
-                _, mask = cv2.threshold(mask, 1, 255, cv2.THRESH_BINARY)
-
-                # Axpply inpainting
-                print("starting patining")
-                print(self.level_dim)
-                print(img.shape)
-                print(mask.shape)
-                try:
-
-                    img = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
-                    cv2.imwrite(f'inpainted_image_{self.name}.png', img)
-                except cv2.error as e:
-                    #print("Inpainting failed:", str(e))
-                    # Additional debugging information
-                    print(f"Image shape: {img.shape}, Image type: {img.dtype}")
-                    print(f"Mask shape: {mask.shape}, Mask type: {mask.dtype}")
-                    raise ValueError("Inpainting failed:", str(e))
-
+                
             #img =  cv2.inpaint(img, black_mask, 3, cv2.INPAINT_TELEA)
-            b_n_w = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            # Apply thresholding to detect large uniform areas
-            _, thresh = cv2.threshold(b_n_w, 1, 255, cv2.THRESH_BINARY)
+
+
             ratio = 1
+
 
         img_hsv = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)  # Convert to HSV space
         img_med = cv2.medianBlur(img_hsv[:,:,1], mthresh)  # Apply median blurring
-        if batch3_4:
-            # Apply histogram equalization to enhance contrast
-            img_med = cv2.equalizeHist(img_med)
 
         
         # Thresholding
@@ -243,8 +266,10 @@ class WholeSlideImage(object):
         else:
             _, img_otsu = cv2.threshold(img_med, sthresh, sthresh_up, cv2.THRESH_BINARY)
         # save the img_otsu for debugging
-        cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
+
         
+        #cv2.imwrite(f"img_otsu_{self.name}.png", img_otsu)
+        #asdfv
         
         # Morphological closing
         if close > 0:

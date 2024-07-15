@@ -186,7 +186,10 @@ def seg_and_patch(source, save_dir, patch_save_dir, mask_save_dir, stitch_save_d
 		seg_time_elapsed = -1
 		
 		if seg:
-			WSI_object, seg_time_elapsed = segment(WSI_object, current_seg_params, current_filter_params) 
+			try:
+				WSI_object, seg_time_elapsed = segment(WSI_object, current_seg_params, current_filter_params) 
+			except:
+				continue
 
 		if save_mask:
 			print(current_vis_params)
