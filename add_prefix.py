@@ -10,6 +10,7 @@
 import os
 import sys
 import glob
+import pandas as pd
 def add_prefix(prefix, folder):
     files = glob.glob(folder + '/*')
     for file in files:
@@ -18,7 +19,15 @@ def add_prefix(prefix, folder):
             newname = prefix + '_' + filename
             os.rename(file, os.path.join(folder, newname))
 
-
+def modify_csv(prefix, csv_file_path):
+    tsv = pd.read_csv(csv_file_path)
+    # find slide_id column and add prefix to each element
+    slide_id = tsv['slide_id']
+    new_slide_id = []
+    for slide in slide_id:
+        new_slide_id.append(prefix + '_' + slide)
+    tsv['slide_id'] = new_slide_id
+    tsv.to_csv(csv_file_path, index=False)
 def main():
     if len(sys.argv) != 3:
         print('Usage: python add_prefix.py STRINGNAME foldername')
@@ -30,8 +39,9 @@ def main():
         if os.path.isdir(sub_folder):
             add_prefix(prefix, sub_folder)
         else:
-            pass
+            # make sure it is a csv file
+            assert sub_folder.endswith('.csv'), 'Not a csv file'
+            modify_csv(prefix, sub_folder)
 
 if __name__ == '__main__':
     main()
-    
