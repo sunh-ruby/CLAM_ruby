@@ -42,11 +42,11 @@ elif args.task == 'task_2_tumor_subtyping':
                             ignore=[])
 elif args.task == 'task_3_biomarker':
     args.n_classes=2
-    dataset = Generic_WSI_Classification_Dataset(csv_path = '../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv',
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '../../Data/proscia_metadata/KRAS_batch1,3,4_summary.csv',
                             shuffle = False, 
                             seed = args.seed, 
                             print_info = True,
-                            label_dict = {'Detected':0, 'Not Detected':1},
+                            label_dict = {'WT':0, 'Mutated':1},
                             patient_strat=True,
                             ignore=[])
 elif args.task == 'task_4_cancer':
