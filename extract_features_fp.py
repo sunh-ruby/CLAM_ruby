@@ -90,8 +90,7 @@ if __name__ == '__main__':
 	print('loading model checkpoint')
 	#model = resnet50_baseline(pretrained= True)
 	#model = ResNeXt50_trained(pretrained= True)
-	hf_token = "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"
-	os.environ["HF_TOKEN"] = hf_token
+
 	model =  timm.create_model("hf-hub:MahmoodLab/UNI", pretrained=True, init_values=1e-5, dynamic_img_size=True)
 	model = model.to(device)
 	
