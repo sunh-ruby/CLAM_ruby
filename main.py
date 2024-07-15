@@ -178,7 +178,7 @@ elif args.task == 'task_2_tumor_subtyping':
 elif args.task == 'task_3_biomarker':
     args.n_classes=2
     dataset = Generic_MIL_Dataset(csv_path = '../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv',
-                            data_dir= os.path.join(args.data_root_dir, 'proscia_batch1'),
+                            data_dir= os.path.join(args.data_root_dir, ''),
                             shuffle = False, 
                             seed = args.seed, 
                             print_info = True,

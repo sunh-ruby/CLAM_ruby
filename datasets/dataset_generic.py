@@ -63,7 +63,8 @@ class Generic_WSI_Classification_Dataset(Dataset):
 		self.label_col = label_col
 
 		slide_data = pd.read_csv(csv_path)
-		slide_data['slide_id'] = [x.replace('.svs','') for x in slide_data['slide_id']]
+		# replace .svs or .ndpi
+		slide_data['slide_id'] = slide_data['slide_id'].apply(lambda x: re.sub(r'\.svs|\.ndpi', '', x))
 		slide_data = self.filter_df(slide_data, filter_dict)
 		slide_data = self.df_prep(slide_data, self.label_dict, ignore, self.label_col)
 
@@ -321,6 +322,7 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 		**kwargs):
 	
 		super(Generic_MIL_Dataset, self).__init__(**kwargs)
+		# data dir could be a dict or a string
 		self.data_dir = data_dir
 		self.use_h5 = False
 
@@ -338,18 +340,37 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 
 		if not self.use_h5:
 			if self.data_dir:
-				full_path = os.path.join(data_dir, 'pt_files', '{}.pt'.format(slide_id))
-				features = torch.load(full_path)
+				if 'pt_files' not in os.listdir(data_dir):
+					# that mean there are subfolders
+					self.data_dir = [os.path.join(data_dir, i) for i in os.listdir(data_dir)]
+					for i in self.data_dir:
+						if slide_id + '.pt' in os.listdir(i+ '/pt_files'):
+							full_path = os.path.join(i, slide_id, '{}.pt'.format(slide_id))
+							features = torch.load(full_path)
+				else:
+					full_path = os.path.join(data_dir, 'pt_files', '{}.pt'.format(slide_id))
+					features = torch.load(full_path)
 				return features, label
 			
 			else:
 				return slide_id, label
 
 		else:
-			full_path = os.path.join(data_dir,'h5_files','{}.h5'.format(slide_id))
-			with h5py.File(full_path,'r') as hdf5_file:
-				features = hdf5_file['features'][:]
-				coords = hdf5_file['coords'][:]
+			if "h5_files" not in os.listdir(data_dir):
+				# that mean there are subfolders
+				self.data_dir = [os.path.join(data_dir, i) for i in os.listdir(data_dir)]
+				for i in self.data_dir:
+					if slide_id + '.h5' in os.listdir(i+ '/h5_files'):
+						full_path = os.path.join(i, slide_id, '{}.h5'.format(slide_id))
+						with h5py.File(full_path,'r') as hdf5_file:
+							features = hdf5_file['features'][:]
+							coords = hdf5_file['coords'][:]
+
+			else:
+				full_path = os.path.join(data_dir,'h5_files','{}.h5'.format(slide_id))
+				with h5py.File(full_path,'r') as hdf5_file:
+					features = hdf5_file['features'][:]
+					coords = hdf5_file['coords'][:]
 
 			features = torch.from_numpy(features)
 			return features, label, coords
