@@ -44,7 +44,7 @@ class Accuracy_Logger(object):
         
         return acc, correct, count
 
-class EarlyStopping:
+class EarlyStopping_old:
     """Early stops the training if validation loss doesn't improve after a given patience."""
     def __init__(self, patience=20, stop_epoch=50, verbose=False):
         """
@@ -86,6 +86,51 @@ class EarlyStopping:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
         torch.save(model.state_dict(), ckpt_name)
         self.val_loss_min = val_loss
+
+
+class EarlyStopping:
+    """Early stops the training if validation loss doesn't improve after a given patience."""
+    def __init__(self, patience=20, stop_epoch=50, verbose=False):
+        """
+        Args:
+            patience (int): How long to wait after last time validation loss improved.
+                            Default: 20
+            stop_epoch (int): Earliest epoch possible for stopping
+            verbose (bool): If True, prints a message for each validation loss improvement. 
+                            Default: False
+        """
+        self.patience = patience
+        self.stop_epoch = stop_epoch
+        self.verbose = verbose
+        self.counter = 0
+        self.best_score = None
+        self.early_stop = False
+        self.val_auc_min = 0
+
+    def __call__(self, epoch, val_auc, model, ckpt_name = 'checkpoint.pt'):
+
+        score = val_auc
+
+        if self.best_score is None:
+            self.best_score = score
+            self.save_checkpoint(val_auc, model, ckpt_name)
+        elif score < self.best_score:
+            self.counter += 1
+            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            if self.counter >= self.patience and epoch > self.stop_epoch:
+                self.early_stop = True
+        else:
+            self.best_score = score
+            self.save_checkpoint(val_auc, model, ckpt_name)
+            self.counter = 0
+
+    def save_checkpoint(self, val_auc, model, ckpt_name):
+        '''Saves model when validation loss decrease.'''
+        if self.verbose:
+            print(f'Validation loss decreased ({self.val_auc_min:.6f} --> {val_auc:.6f}).  Saving model ...')
+        torch.save(model.state_dict(), ckpt_name)
+        self.val_auc_min = val_auc
+
 
 def train(datasets, cur, args):
     """   
@@ -164,6 +209,8 @@ def train(datasets, cur, args):
     print('Done!')
     
     print('\nInit Loaders...', end=' ')
+    
+
     train_loader = get_split_loader(train_split, training=True, testing = args.testing, weighted = args.weighted_sample)
     val_loader = get_split_loader(val_split,  testing = args.testing)
     test_loader = get_split_loader(test_split, testing = args.testing)
@@ -171,7 +218,7 @@ def train(datasets, cur, args):
 
     print('\nSetup EarlyStopping...', end=' ')
     if args.early_stopping:
-        early_stopping = EarlyStopping(patience = 20, stop_epoch=50, verbose = True)
+        early_stopping = EarlyStopping(patience = 10, stop_epoch=50, verbose = True)
 
     else:
         early_stopping = None
@@ -475,7 +522,7 @@ def validate_clam(cur, epoch, model, loader, n_classes, early_stopping = None, w
 
     if early_stopping:
         assert results_dir
-        early_stopping(epoch, val_loss, model, ckpt_name = os.path.join(results_dir, "s_{}_checkpoint.pt".format(cur)))
+        early_stopping(epoch, auc, model, ckpt_name = os.path.join(results_dir, "s_{}_checkpoint.pt".format(cur)))
         
         if early_stopping.early_stop:
             print("Early stopping")

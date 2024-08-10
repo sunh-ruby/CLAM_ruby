@@ -174,7 +174,7 @@ def seg_and_patch(source, save_dir, patch_save_dir, mask_save_dir, stitch_save_d
 		
 		stitch_time_elapsed = -1
 		if stitch:
-			file_path = os.path.join(patch_save_dir, slide_id+'.h5')
+			file_path = os.path.join(patch_save_dir, slidstitchinge_id+'.h5')
 			heatmap, stitch_time_elapsed = stitching(file_path, downscale=64)
 			stitch_path = os.path.join(stitch_save_dir, slide_id+'.png')
 			heatmap.save(stitch_path)

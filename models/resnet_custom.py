@@ -157,6 +157,17 @@ def ResNeXt50_trained(pretrained=True):
         My_model.load_state_dict(checkpoint, strict=True)
     return My_model.pretrained
 
+def Cancer_region_scorer(pretrained=True):
+    resnext50_pretrained = torch.hub.load('pytorch/vision:v0.10.0', 'resnext50_32x4d')
+    My_model = Myresnext50(my_pretrained_model= resnext50_pretrained, num_classes = 2)
+    if pretrained:
+        ckpt_dir= "/home/harry/Documents/codes/PatchML/checkpoints_cancer_regions_pseudo_batch1and2/model_46_0.9528982812881118.pth"
+        checkpoint_PATH = ckpt_dir
+        checkpoint = torch.load(checkpoint_PATH)
+        checkpoint  = remove_data_parallel(checkpoint)
+        My_model.load_state_dict(checkpoint, strict=True)
+    return My_model
+
 
 def load_pretrained_weights(model, name):
     pretrained_dict = model_zoo.load_url(model_urls[name])

@@ -46,6 +46,7 @@ def main(args):
                 csv_path='{}/splits_{}.csv'.format(args.split_dir, i))
         
         datasets = (train_dataset, val_dataset, test_dataset)
+        
         results, test_auc, val_auc, test_acc, val_acc  = train(datasets, i, args)
         all_test_auc.append(test_auc)
         all_val_auc.append(val_auc)
@@ -178,11 +179,11 @@ elif args.task == 'task_2_tumor_subtyping':
 elif args.task == 'task_3_biomarker':
     args.n_classes=2
     dataset = Generic_MIL_Dataset(csv_path = '../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv',
-                            data_dir= os.path.join(args.data_root_dir, ''),
+                                            data_dir= os.path.join(args.data_root_dir, ''),
                             shuffle = False, 
                             seed = args.seed, 
                             print_info = True,
-                            label_dict = {'Detected':0, 'Not Detected':1},
+                            label_dict = {'Not Detected':0, 'Detected':1},
                             patient_strat=True,
                             ignore=[])
 elif args.task == 'task_4_cancer':
@@ -195,9 +196,31 @@ elif args.task == 'task_4_cancer':
                             label_dict = {'not present':0, 'present':1},
                             patient_strat=True,
                             ignore=[])
+elif args.task == 'task_5_EGFR':
+    args.n_classes=2
+    dataset = Generic_MIL_Dataset(csv_path = '/home/harry/Documents/Data/proscia_metadata/EGFR_batch1-4_summary.csv',
+                            data_dir= os.path.join(args.data_root_dir, ''),
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'WT':0, 'Mutated':1},
+                            patient_strat=True,
+                            ignore=[])
+
+elif args.task == "task_6_KRAS":
+    args.n_classes=2
+    dataset = Generic_MIL_Dataset(csv_path = '/home/harry/Documents/Data/proscia_metadata/KRAS_batch1-4_summary.csv',
+                            data_dir= os.path.join(args.data_root_dir, ''),
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'WT':0, 'Mutated':1},
+                            patient_strat=True,
+                            ignore=[])
 
 else:
     raise NotImplementedError
+
     
 if not os.path.isdir(args.results_dir):
     os.mkdir(args.results_dir)

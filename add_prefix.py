@@ -35,6 +35,8 @@ def main():
     prefix = sys.argv[1]
     folder = sys.argv[2]
     sub_folders = glob.glob(folder + '/*')
+    if len(sub_folders) == 0:
+        print(f"The folder is not existed or empty or {folder} is actually a file")
     for sub_folder in sub_folders:
         if os.path.isdir(sub_folder):
             add_prefix(prefix, sub_folder)
@@ -42,6 +44,8 @@ def main():
             # make sure it is a csv file
             assert sub_folder.endswith('.csv'), 'Not a csv file'
             modify_csv(prefix, sub_folder)
+    if os.path.exists(folder) and not os.path.isdir(folder):
+        modify_csv(prefix, folder)
 
 if __name__ == '__main__':
     main()

@@ -12,7 +12,7 @@ parser.add_argument('--seed', type=int, default=1,
                     help='random seed (default: 1)')
 parser.add_argument('--k', type=int, default=10,
                     help='number of splits (default: 10)')
-parser.add_argument('--task', type=str, choices=['task_1_tumor_vs_normal', 'task_2_tumor_subtyping',"task_3_biomarker", "task_4_cancer"])
+parser.add_argument('--task', type=str, )
 parser.add_argument('--val_frac', type=float, default= 0.1,
                     help='fraction of labels for validation (default: 0.1)')
 parser.add_argument('--test_frac', type=float, default= 0.1,
@@ -42,11 +42,11 @@ elif args.task == 'task_2_tumor_subtyping':
                             ignore=[])
 elif args.task == 'task_3_biomarker':
     args.n_classes=2
-    dataset = Generic_WSI_Classification_Dataset(csv_path = '../../Data/proscia_metadata/KRAS_batch1,3,4_summary.csv',
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv',
                             shuffle = False, 
                             seed = args.seed, 
                             print_info = True,
-                            label_dict = {'WT':0, 'Mutated':1},
+                            label_dict = {'Not Detected':0, 'Detected':1},
                             patient_strat=True,
                             ignore=[])
 elif args.task == 'task_4_cancer':
@@ -58,9 +58,39 @@ elif args.task == 'task_4_cancer':
                             label_dict = {'not present':0, 'present':1},
                             patient_strat=True,
                             ignore=[])
+elif args.task == 'task_5_EGFR':
+    args.n_classes = 2
+    # ../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '/home/harry/Documents/Data/proscia_metadata/EGFR_batch1-4_summary.csv',
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'WT':0, 'Mutated':1},
+                            patient_strat=True,
+                            ignore=[])
+elif args.task == 'task_6_KRAS':
+    args.n_classes = 2
+    # ../../Data/proscia_metadata/Ruby_Robotics_SOW-001_Diff_Quik_Batch_1_KRAS_v2.csv
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '/home/harry/Documents/Data/proscia_metadata/KRAS_batch1-4_summary.csv',
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'WT':0, 'Mutated':1},
+                            patient_strat=True,
+                            ignore=[])
 else:
     raise NotImplementedError
-
+"""
+elif args.task == 'task_3_biomarker':
+    args.n_classes=2
+    dataset = Generic_WSI_Classification_Dataset(csv_path = '../../Data/proscia_metadata/KRAS_batch1-4_summary.csv',
+                            shuffle = False, 
+                            seed = args.seed, 
+                            print_info = True,
+                            label_dict = {'WT':0, 'Mutated':1},
+                            patient_strat=True,
+                            ignore=[])
+"""
 num_slides_cls = np.array([len(cls_ids) for cls_ids in dataset.patient_cls_ids])
 val_num = np.round(num_slides_cls * args.val_frac).astype(int)
 test_num = np.round(num_slides_cls * args.test_frac).astype(int)

@@ -223,6 +223,7 @@ class Generic_WSI_Classification_Dataset(Dataset):
 
 		if from_id:
 			if len(self.train_ids) > 0:
+				
 				train_data = self.slide_data.loc[self.train_ids].reset_index(drop=True)
 				train_split = Generic_Split(train_data, data_dir=self.data_dir, num_classes=self.num_classes)
 
@@ -325,6 +326,7 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 		# data dir could be a dict or a string
 		self.data_dir = data_dir
 		self.use_h5 = False
+		self.cancer_sort = True
 
 	def load_from_h5(self, toggle):
 		self.use_h5 = toggle
@@ -337,31 +339,70 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 			data_dir = self.data_dir[source]
 		else:
 			data_dir = self.data_dir
-
 		if not self.use_h5:
+
 			if self.data_dir:
-				if 'pt_files' not in os.listdir(data_dir):
+				if 'pt_files' not in os.listdir(self.data_dir):
 					# that mean there are subfolders
-					self.data_dir = [os.path.join(data_dir, i) for i in os.listdir(data_dir)]
-					for i in self.data_dir:
-						if slide_id + '.pt' in os.listdir(i+ '/pt_files'):
-							full_path = os.path.join(i, slide_id, '{}.pt'.format(slide_id))
+					
+					folders = [os.path.join(self.data_dir, i) for i in os.listdir(self.data_dir)]
+					existence = False
+					for root in folders:
+						if slide_id + '.pt' in os.listdir(root+ '/pt_files_UNI'):
+							#print(slide_id)
+							full_path = os.path.join(root, 'pt_files_UNI', '{}.pt'.format(slide_id))
 							features = torch.load(full_path)
+							existence = True
+							break
+					assert existence, slide_id + '.pt does not exist anywhere'
+					if self.cancer_sort:
+                        # read h5 file to get the coords
+						full_path = os.path.join(root, 'h5_files', '{}.h5'.format(slide_id))
+						with h5py.File(full_path,'r') as hdf5_file:
+							coords = hdf5_file['coords'][:]
+							#assert "cancer_region_scorer" in hdf5_file.attrs.keys(), "cancer_region_scorer not in h5 file, are you sure you want to do cancer_sort?"
+							cancer_scores = hdf5_file["cancer_region_scorer"]
+							assert coords.shape[0] == cancer_scores.shape[0], f"coords and cancer_scores do not match, current coords shape: {coords.shape[0]}, current cancer_scores shape: {cancer_scores.shape[0]}"
+			                # sorting the coords and features based on the cancer scores
+							sorting = False
+							if sorting:
+								indices = np.argsort(cancer_scores)
+								features = features[indices]
+								features = features[:1000]
+
+						
+					return features, label
+					
 				else:
 					full_path = os.path.join(data_dir, 'pt_files', '{}.pt'.format(slide_id))
 					features = torch.load(full_path)
-				return features, label
+					if self.cancer_sort:
+						full_path = os.path.join(data_dir, 'h5_files', '{}.h5'.format(slide_id))
+						with h5py.File(full_path,'r') as hdf5_file:
+							coords = hdf5_file['coords'][:]
+							#print(hdf5_file.keys())
+							assert "cancer_region_scorer" in hdf5_file.keys(), "cancer_region_scorer not in h5 file, are you sure you want to do cancer_sort?"
+							cancer_scores = hdf5_file["cancer_region_scorer"]
+							assert coords.shape[0] == cancer_scores.shape[0], f"coords and cancer_scores do not match, current coords shape: {coords.shape[0]}, current cancer_scores shape: {cancer_scores.shape[0]}"
+                            # sorting the coords and features based on the cancer scores
+							scores = np.array(cancer_scores)  # Convert to NumPy array if possible
+							indices = np.argsort(-scores)
+							#print(indices)
+							features = features[indices]
+							features = features[:100]
+					return features, label
 			
 			else:
 				return slide_id, label
 
 		else:
+
 			if "h5_files" not in os.listdir(data_dir):
 				# that mean there are subfolders
 				self.data_dir = [os.path.join(data_dir, i) for i in os.listdir(data_dir)]
 				for i in self.data_dir:
 					if slide_id + '.h5' in os.listdir(i+ '/h5_files'):
-						full_path = os.path.join(i, slide_id, '{}.h5'.format(slide_id))
+						full_path = os.path.join(i, 'h5_files', '{}.h5'.format(slide_id))
 						with h5py.File(full_path,'r') as hdf5_file:
 							features = hdf5_file['features'][:]
 							coords = hdf5_file['coords'][:]
@@ -383,6 +424,7 @@ class Generic_Split(Generic_MIL_Dataset):
 		self.data_dir = data_dir
 		self.num_classes = num_classes
 		self.slide_cls_ids = [[] for i in range(self.num_classes)]
+		self.cancer_sort = True
 		for i in range(self.num_classes):
 			self.slide_cls_ids[i] = np.where(self.slide_data['label'] == i)[0]
 

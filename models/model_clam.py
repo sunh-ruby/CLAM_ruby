@@ -15,6 +15,7 @@ args:
 class Attn_Net(nn.Module):
 
     def __init__(self, L = 1024, D = 256, dropout = False, n_classes = 1):
+    #def __init__(self, L = 1000, D = 256, dropout = False, n_classes = 1):
         super(Attn_Net, self).__init__()
         self.module = [
             nn.Linear(L, D),
@@ -40,6 +41,7 @@ args:
 """
 class Attn_Net_Gated(nn.Module):
     def __init__(self, L = 1024, D = 256, dropout = False, n_classes = 1):
+    #def __init__(self, L = 1000, D = 256, dropout = False, n_classes = 1):
         super(Attn_Net_Gated, self).__init__()
         self.attention_a = [
             nn.Linear(L, D),
@@ -79,6 +81,7 @@ class CLAM_SB(nn.Module):
         instance_loss_fn=nn.CrossEntropyLoss(), subtyping=False):
         super(CLAM_SB, self).__init__()
         self.size_dict = {"small": [1024, 512, 256], "big": [1024, 512, 384]}
+        #self.size_dict = {"small": [1000, 512, 256], "big": [1000, 512, 384]}
         size = self.size_dict[size_arg]
         fc = [nn.Linear(size[0], size[1]), nn.ReLU()]
         if dropout:
@@ -146,13 +149,23 @@ class CLAM_SB(nn.Module):
 
     def forward(self, h, label=None, instance_eval=False, return_features=False, attention_only=False):
         device = h.device
-        A, h = self.attention_net(h)  # NxK        
+        A, h = self.attention_net(h)  # NxK   
+        verbose = False
+        if verbose == True:
+            print('A shape')
+            print(A.shape)     
+            print("Extracted feature shape")
+            print(h.shape)
+        #raise NotImplementedError("Stop here for now!")
         A = torch.transpose(A, 1, 0)  # KxN
         if attention_only:
             return A
         A_raw = A
         A = F.softmax(A, dim=1)  # softmax over N
-
+        if verbose == True:
+            print(("A shape after softmax"))
+            print(A.shape)
+        
         if instance_eval:
             total_inst_loss = 0.0
             all_preds = []
@@ -178,7 +191,15 @@ class CLAM_SB(nn.Module):
                 total_inst_loss /= len(self.instance_classifiers)
                 
         M = torch.mm(A, h) 
+        if verbose == True:
+            print("M shape")
+            print(M.shape)
+
         logits = self.classifiers(M)
+        if verbose == True:
+            print("Logits shape")
+            print(logits.shape)
+            raise NotImplementedError("Stop here for now")
         Y_hat = torch.topk(logits, 1, dim = 1)[1]
         Y_prob = F.softmax(logits, dim = 1)
         if instance_eval:
