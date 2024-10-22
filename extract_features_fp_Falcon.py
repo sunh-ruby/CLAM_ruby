@@ -23,7 +23,7 @@ import sys
 sys.path.append('models/')
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
+#esdgsfh
 def compute_w_loader(file_path, output_path, wsi, model,
  	batch_size = 8, verbose = 0, print_every=20, pretrained=True, 
 	custom_downsample=1, target_patch_size=-1, cancer_region_scorer=False, custermized_transform = None, virchow=False):
@@ -153,6 +153,7 @@ if __name__ == '__main__':
 			custom_downsample=args.custom_downsample, target_patch_size=args.target_patch_size, custermized_transform=virchow_transforms,
 			cancer_region_scorer=CANCER_SCORING, virchow = True)
 		else:
+			assert args.batch_size ==1, "not sure what will happen in yolo but I think this make the most sense"
 			wsi = openslide.open_slide(slide_file_path.replace('batch1_',"").replace('batch2_',"").replace('batch3_',"").replace('batch4_',""))
 			output_file_path = compute_w_loader(h5_file_path, output_path, wsi, 
 			model = model, batch_size = args.batch_size, verbose = 1, print_every = 20, 
