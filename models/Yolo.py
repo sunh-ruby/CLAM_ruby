@@ -7,7 +7,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from numpy import random
 from tqdm import tqdm
-from models.experimental import attempt_load
+from models.experimental_yolo import attempt_load
 from utils.datasets import LoadStreams, LoadImages
 from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
     scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
@@ -19,8 +19,7 @@ from classifier.models import Img_DataLoader, eval_hs
 
 class opt:
     def __init__(self):
-        self.weights = 'yolov7.pt'
-        self.source = 'inference/images'
+        self.weights = '/home/harry/Documents/codes/ruby-yolo/runs/train/yolov733/weights/epoch_099.pt'
         self.img_size = 512
         self.conf_thres = 0.25
         self.iou_thres = 0.45
@@ -53,10 +52,7 @@ class YoloResNeXt:
         self.imgsz = check_img_size(opt.img_size, s=self.stride)  # check img_size
         if self.half:
             self.model.half()  # to FP16
-        self.classify = False
-        if self.classify:
-            self.modelc = load_classifier(name='resnet101', n=2)  # initialize
-            self.modelc.load_state_dict(torch.load('weights/resnet101.pt', map_location=self.device)['model']).to(self.device).eval()
+
         self.names = self.model.module.names if hasattr(self.model, 'module') else self.model.names
 
         checkpoint_path = "/home/harry/Documents/codes/PatchML/checkpoints_256_batch0-12-CE-addbenign/model_17_0.9962293741235031.pth"
@@ -122,10 +118,77 @@ class YoloResNeXt:
                     temp_img_list.append(temp_img)
                     cell_name = save_path.split('/')[-1].split('.')[0] + f'_{points[0][0]}_{points[0][1]}'
                     temp_img_name.append(cell_name)
-        feature_embedding = encoder(ckpt_dir = checkpoint_path, X_test = temp_img_list, labels = temp_img_name)
+        feature_embedding = self.encoder(ckpt_dir = checkpoint_path, X_test = temp_img_list, labels = temp_img_name)
 
         # the output of feature embedding is the feature of the cell images
         # use mean to compute it as the patch feature
         patch_feature = feature_embedding.mean(axis = 0)
         return patch_feature
 
+    def encoder(self):
+
+
+
+
+
+
+class Cell_embedding_extractors:
+    def __init__(self, checkpoint_path):
+        resnext50_pretrained = torch.hub.load(
+            "pytorch/vision:v0.10.0", "resnext50_32x4d", verbose=False, pretrained=True,
+        )
+        My_model = Myresnext50(
+            my_pretrained_model=resnext50_pretrained, num_classes=7
+        )
+
+        checkpoint = torch.load(checkpoint_path)
+
+
+        checkpoint  = remove_data_parallel(checkpoint)
+
+        My_model.load_state_dict(checkpoint, strict=True)
+        
+
+        My_model = My_model.cuda().eval()
+        cell_types_df =meta_table(class_number=7)
+
+    def forward
+
+    
+
+
+
+
+def meta_table(class_number ):
+    if class_number ==6:
+        cell_types = ['Artifact', 'Epithelial cells', 'NSCC', 'RBC', 'Suspicion', 'WBC']
+
+        cell_types = list(cell_types)
+        cell_types.sort()
+
+        cell_types_df = pd.DataFrame(cell_types, columns=['Cell_Types'])# converting type of columns to 'category'
+        cell_types_df['Cell_Types'] = cell_types_df['Cell_Types'].astype('category')# Assigning numerical values and storing in another column
+        cell_types_df['Cell_Types_Cat'] = cell_types_df['Cell_Types'].cat.codes
+
+        enc = OneHotEncoder(handle_unknown='ignore')# passing bridge-types-cat column (label encoded values of bridge_types)
+        enc_df = pd.DataFrame(enc.fit_transform(cell_types_df[['Cell_Types_Cat']]).toarray())# merge with main df bridge_df on key values
+        cell_types_df = cell_types_df.join(enc_df)
+    elif class_number ==7:
+        cell_types = ['Artifact', "Benign_A", 'Epithelial cells', 'NSCC', 'RBC', 'Suspicion', 'WBC']
+
+        cell_types = list(cell_types)
+        cell_types.sort()
+
+        cell_types_df = pd.DataFrame(cell_types, columns=['Cell_Types'])# converting type of columns to 'category'
+        cell_types_df['Cell_Types'] = cell_types_df['Cell_Types'].astype('category')# Assigning numerical values and storing in another column
+        cell_types_df['Cell_Types_Cat'] = cell_types_df['Cell_Types'].cat.codes
+
+        enc = OneHotEncoder(handle_unknown='ignore')# passing bridge-types-cat column (label encoded values of bridge_types)
+        enc_df = pd.DataFrame(enc.fit_transform(cell_types_df[['Cell_Types_Cat']]).toarray())# merge with main df bridge_df on key values
+        cell_types_df = cell_types_df.join(enc_df)     
+    else:
+        ValueError(f"the class number is {class_number}. currently there is no such setup")  
+
+    return cell_types_df
+
+        
