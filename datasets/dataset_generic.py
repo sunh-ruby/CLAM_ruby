@@ -348,27 +348,27 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 					folders = [os.path.join(self.data_dir, i) for i in os.listdir(self.data_dir)]
 					existence = False
 					for root in folders:
-						if slide_id + '.pt' in os.listdir(root+ '/pt_files_UNI'):
+						if slide_id + '.pt' in os.listdir(root+ '/pt_files'):
 							#print(slide_id)
-							full_path = os.path.join(root, 'pt_files_UNI', '{}.pt'.format(slide_id))
+							full_path = os.path.join(root, 'pt_files_Ruby', '{}.pt'.format(slide_id))
+							
 							features = torch.load(full_path)
 							existence = True
 							break
 					assert existence, slide_id + '.pt does not exist anywhere'
 					if self.cancer_sort:
                         # read h5 file to get the coords
-						full_path = os.path.join(root, 'h5_files', '{}.h5'.format(slide_id))
+						full_path = os.path.join(root, 'h5_files_ResNeXt_cancer', '{}.h5'.format(slide_id))
 						with h5py.File(full_path,'r') as hdf5_file:
 							coords = hdf5_file['coords'][:]
-							#assert "cancer_region_scorer" in hdf5_file.attrs.keys(), "cancer_region_scorer not in h5 file, are you sure you want to do cancer_sort?"
+							assert "cancer_region_scorer" in hdf5_file.keys(), f"cancer_region_scorer not in h5 file, are you sure you want to do cancer_sort? \n {full_path}"
 							cancer_scores = hdf5_file["cancer_region_scorer"]
 							assert coords.shape[0] == cancer_scores.shape[0], f"coords and cancer_scores do not match, current coords shape: {coords.shape[0]}, current cancer_scores shape: {cancer_scores.shape[0]}"
 			                # sorting the coords and features based on the cancer scores
-							sorting = False
-							if sorting:
+							if self.cancer_sort:
 								indices = np.argsort(cancer_scores)
 								features = features[indices]
-								features = features[:1000]
+								features = features[:2000]
 
 						
 					return features, label
@@ -377,7 +377,7 @@ class Generic_MIL_Dataset(Generic_WSI_Classification_Dataset):
 					full_path = os.path.join(data_dir, 'pt_files', '{}.pt'.format(slide_id))
 					features = torch.load(full_path)
 					if self.cancer_sort:
-						full_path = os.path.join(data_dir, 'h5_files', '{}.h5'.format(slide_id))
+						full_path = os.path.join(data_dir, 'h5_files_ResNeXt_cancer', '{}.h5'.format(slide_id))
 						with h5py.File(full_path,'r') as hdf5_file:
 							coords = hdf5_file['coords'][:]
 							#print(hdf5_file.keys())

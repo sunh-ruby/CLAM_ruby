@@ -1,16 +1,6 @@
 from __future__ import print_function
-
-import argparse
-import pdb
+import sys
 import os
-import math
-
-# internal imports
-from utils.file_utils import save_pkl, load_pkl
-from utils.utils import *
-from utils.core_utils import train
-from datasets.dataset_generic import Generic_WSI_Classification_Dataset, Generic_MIL_Dataset
-
 # pytorch imports
 import torch
 from torch.utils.data import DataLoader, sampler
@@ -19,7 +9,20 @@ import torch.nn.functional as F
 
 import pandas as pd
 import numpy as np
+# Add the project root to sys.path
+project_root = os.path.abspath(os.path.dirname(__file__))
+sys.path.append(project_root)
+import argparse
+import pdb
 
+import math
+
+# internal imports
+from datasets.dataset_generic import Generic_WSI_Classification_Dataset, Generic_MIL_Dataset
+from utils.file_utils import save_pkl, load_pkl
+from utils.utils import *
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from utils.core_utils import train
 
 def main(args):
     # create results directory if necessary
@@ -93,7 +96,7 @@ parser.add_argument('--opt', type=str, choices = ['adam', 'sgd'], default='adam'
 parser.add_argument('--drop_out', action='store_true', default=False, help='enable dropout (p=0.25)')
 parser.add_argument('--bag_loss', type=str, choices=['svm', 'ce'], default='ce',
                      help='slide-level classification loss function (default: ce)')
-parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil'], default='clam_sb', 
+parser.add_argument('--model_type', type=str, choices=['clam_sb', 'clam_mb', 'mil', 'transformer'], default='clam_sb', 
                     help='type of model (default: clam_sb, clam w/ single attention branch)')
 parser.add_argument('--exp_code', type=str, help='experiment code for saving results')
 parser.add_argument('--weighted_sample', action='store_true', default=False, help='enable weighted sampling')
@@ -126,7 +129,7 @@ def seed_torch(seed=7):
 
 seed_torch(args.seed)
 
-encoding_size = 1024
+encoding_size = 2
 settings = {'num_splits': args.k, 
             'k_start': args.k_start,
             'k_end': args.k_end,

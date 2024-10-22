@@ -2,9 +2,14 @@ import numpy as np
 import torch
 from utils.utils import *
 import os
+import sys
+sys.path.append('.')
+sys.path.append('..')
+sys.path.append('/home/harry/Documents/codes/CLAM_ruby/')
 from datasets.dataset_generic import save_splits
 from models.model_mil import MIL_fc, MIL_fc_mc
 from models.model_clam import CLAM_MB, CLAM_SB
+from models.model_transformor import  MultiHeadAttentionClassifier
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_auc_score, roc_curve
 from sklearn.metrics import auc as calc_auc
@@ -169,7 +174,7 @@ def train(datasets, cur, args):
     print('\nInit Model...', end=' ')
     model_dict = {"dropout": args.drop_out, 'n_classes': args.n_classes}
     
-    if args.model_size is not None and args.model_type != 'mil':
+    if args.model_size is not None and ( args.model_type != 'mil' and args.model_type != 'transformer'):
         model_dict.update({"size_arg": args.model_size})
     
     if args.model_type in ['clam_sb', 'clam_mb']:
@@ -193,8 +198,22 @@ def train(datasets, cur, args):
             model = CLAM_MB(**model_dict, instance_loss_fn=instance_loss_fn)
         else:
             raise NotImplementedError
+    elif args.model_type == 'transformer':
+        if args.B > 0:
+            model_dict.update({'k_sample': args.B})
+        
+        if args.inst_loss == 'svm':
+            from topk.svm import SmoothTop1SVM
+            instance_loss_fn = SmoothTop1SVM(n_classes = 2)
+            if device.type == 'cuda':
+                instance_loss_fn = instance_loss_fn.cuda()
+        else:
+            instance_loss_fn = nn.CrossEntropyLoss()
+        model = MultiHeadAttentionClassifier(**model_dict,instance_loss_fn=instance_loss_fn)
+
     
-    else: # args.model_type == 'mil'
+    else: # 
+        assert args.model_type == 'mil', "something is off"
         if args.n_classes > 2:
             model = MIL_fc_mc(**model_dict)
         else:
@@ -229,6 +248,11 @@ def train(datasets, cur, args):
             train_loop_clam(epoch, model, train_loader, optimizer, args.n_classes, args.bag_weight, writer, loss_fn)
             stop = validate_clam(cur, epoch, model, val_loader, args.n_classes, 
                 early_stopping, writer, loss_fn, args.results_dir)
+        elif args.model_type in 'transformer':
+            train_loop_trans(epoch, model, train_loader, optimizer, args.n_classes, args.bag_weight, writer, loss_fn)
+            stop = validate_clam(cur, epoch, model, val_loader, args.n_classes, 
+                early_stopping, writer, loss_fn, args.results_dir)
+
         
         else:
             train_loop(epoch, model, train_loader, optimizer, args.n_classes, writer, loss_fn)
@@ -379,6 +403,76 @@ def train_loop(epoch, model, loader, optimizer, n_classes, writer = None, loss_f
         writer.add_scalar('train/loss', train_loss, epoch)
         writer.add_scalar('train/error', train_error, epoch)
 
+
+def train_loop_trans(epoch, model, loader, optimizer, n_classes,bag_weight, writer = None, loss_fn = None):   
+    device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.train()
+    acc_logger = Accuracy_Logger(n_classes=n_classes)
+    inst_logger = Accuracy_Logger(n_classes=n_classes)
+    
+    train_loss = 0.
+    train_error = 0.
+    train_inst_loss = 0.
+    inst_count = 0
+
+    print('\n')
+    for batch_idx, (data, label) in enumerate(loader):
+        
+        data, label = data.to(device), label.to(device)
+        logits, Y_prob, Y_hat, _, instance_dict = model(data, label=label, instance_eval=True)
+
+        acc_logger.log(Y_hat, label)
+        loss = loss_fn(logits, label)
+        loss_value = loss.item()
+
+        instance_loss = instance_dict['instance_loss']
+        inst_count+=1
+        instance_loss_value = instance_loss.item()
+        train_inst_loss += instance_loss_value
+        
+        total_loss = bag_weight * loss + (1-bag_weight) * instance_loss 
+
+        inst_preds = instance_dict['inst_preds']
+        inst_labels = instance_dict['inst_labels']
+        inst_logger.log_batch(inst_preds, inst_labels)
+
+        train_loss += loss_value
+        if (batch_idx + 1) % 20 == 0:
+            print('batch {}, loss: {:.4f}, instance_loss: {:.4f}, weighted_loss: {:.4f}, '.format(batch_idx, loss_value, instance_loss_value, total_loss.item()) + 
+                'label: {}, bag_size: {}'.format(label.item(), data.size(0)))
+
+        error = calculate_error(Y_hat, label)
+        train_error += error
+        
+        # backward pass
+        total_loss.backward()
+        # step
+        optimizer.step()
+        optimizer.zero_grad()
+
+    # calculate loss and error for epoch
+    train_loss /= len(loader)
+    train_error /= len(loader)
+    
+    if inst_count > 0:
+        train_inst_loss /= inst_count
+        print('\n')
+        for i in range(2):
+            acc, correct, count = inst_logger.get_summary(i)
+            print('class {} clustering acc {}: correct {}/{}'.format(i, acc, correct, count))
+
+    print('Epoch: {}, train_loss: {:.4f}, train_clustering_loss:  {:.4f}, train_error: {:.4f}'.format(epoch, train_loss, train_inst_loss,  train_error))
+    for i in range(n_classes):
+        acc, correct, count = acc_logger.get_summary(i)
+        print('class {}: acc {}, correct {}/{}'.format(i, acc, correct, count))
+        if writer and acc is not None:
+            writer.add_scalar('train/class_{}_acc'.format(i), acc, epoch)
+
+    if writer:
+        writer.add_scalar('train/loss', train_loss, epoch)
+        writer.add_scalar('train/error', train_error, epoch)
+        writer.add_scalar('train/clustering_loss', train_inst_loss, epoch)
+       
    
 def validate(cur, epoch, model, loader, n_classes, early_stopping = None, writer = None, loss_fn = None, results_dir=None):
     device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -431,7 +525,7 @@ def validate(cur, epoch, model, loader, n_classes, early_stopping = None, writer
 
     if early_stopping:
         assert results_dir
-        early_stopping(epoch, val_loss, model, ckpt_name = os.path.join(results_dir, "s_{}_checkpoint.pt".format(cur)))
+        early_stopping(epoch, auc, model, ckpt_name = os.path.join(results_dir, "s_{}_checkpoint.pt".format(cur)))
         
         if early_stopping.early_stop:
             print("Early stopping")

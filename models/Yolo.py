@@ -14,7 +14,7 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
 from utils.plots import plot_one_box, plot_one_point
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 from utils.datasets import create_dataloader
-from classifier.models import Img_DataLoader, eval_hs
+from classifier.models import Img_DataLoader
 from models.resnext import Myresnext50
 
 class opt:
@@ -143,8 +143,6 @@ class YoloResNeXt:
                 images = _batch["image"].cuda()
                 pred_hidden_layer = torch.cat((pred_hidden_layer, My_model.pretrained(images)), 0)
         return pred_hidden_layer.cpu().detach().numpy()
-        
-
 
 
 

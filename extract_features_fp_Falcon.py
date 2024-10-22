@@ -6,7 +6,7 @@ import random
 import numpy as np
 import pdb
 import time
-from datasets.dataset_h5 import Dataset_All_Bags, Whole_Slide_Bag_FP, path_transform, eval_transforms, uni_transforms
+from datasets.dataset_h5 import Dataset_All_Bags, Whole_Slide_Bag_FP, path_transform, eval_transforms, uni_transforms, Whole_Slide_Bag_FP_falcon
 from models.dinov2.data.transforms import make_classification_train_transform
 from torch.utils.data import DataLoader
 from models.resnet_custom import resnet50_baseline, ResNeXt50_trained, Cancer_region_scorer
@@ -17,6 +17,7 @@ from PIL import Image
 import h5py
 import openslide
 import timm
+from models.yolo import YoloResNeXt
 from models.dino_v2 import DINO_V2
 from models.Virchow_loader import Virchow
 import sys
@@ -39,7 +40,7 @@ def compute_w_loader(file_path, output_path, wsi, model,
 		target_patch_size: custom defined, rescaled image size before embedding
         cancer_region_scorer: if not False, then the scoring model is used to compute the cancer region score
 	"""
-	dataset = Whole_Slide_Bag_FP(file_path=file_path, wsi=wsi, pretrained=pretrained, 
+	dataset = Whole_Slide_Bag_FP_falcon(file_path=file_path, wsi=wsi, pretrained=pretrained, 
 		custom_downsample=custom_downsample, target_patch_size=target_patch_size, custom_transforms=custermized_transform)
 		# uni_transforms #path_transform
 	x, y = dataset[0]
@@ -100,23 +101,19 @@ if __name__ == '__main__':
 	bags_dataset = Dataset_All_Bags(csv_path)
 	
 	os.makedirs(args.feat_dir, exist_ok=True)
-	os.makedirs(os.path.join(args.feat_dir, 'pt_files'), exist_ok=True)
-	os.makedirs(os.path.join(args.feat_dir, 'h5_files'), exist_ok=True)
-	dest_files = os.listdir(os.path.join(args.feat_dir, 'pt_files'))
+	os.makedirs(os.path.join(args.feat_dir, 'falcon_pt_files'), exist_ok=True)
+	os.makedirs(os.path.join(args.feat_dir, 'falcon_h5_files'), exist_ok=True)
+	dest_files = os.listdir(os.path.join(args.feat_dir, 'falcon_pt_files'))
 
 	print('loading model checkpoint')
 	#model = DINO_V2(args)
 	#model = resnet50_baseline(pretrained= True)
 	#model = ResNeXt50_trained(pretrained= True)
-	
-	model = Virchow()
-	virchow_transforms = model.return_transorm()
+	model  = YoloResNeXt()
+	#model = Virchow()
+	#virchow_transforms = model.return_transorm()
 	#model =  timm.create_model("hf-hub:MahmoodLab/UNI", pretrained=True, init_values=1e-5, dynamic_img_size=True)
 	model = model.to(device)
-	cancer_regions = False
-	if cancer_regions:
-		CANCER_SCORING =Cancer_region_scorer(pretrained=True)
-		CANCER_SCORING= CANCER_SCORING.to(device)
 
 	# print_network(model)
 	if torch.cuda.device_count() > 1:

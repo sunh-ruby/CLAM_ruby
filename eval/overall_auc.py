@@ -50,6 +50,7 @@ def plot_roc_curves(input_dir="/home/harry/Documents/codes/CLAM_ruby/results/KRA
     # Calculate median and max AUC
     median_auc = np.median(aucs)
     max_auc = np.max(aucs)
+    mean_auc = np.mean(aucs)
 
     # Plot the median ROC curve with std shading
     plt.plot(all_fprs, mean_tprs, color='blue', label=f'Median ROC (AUC = {median_auc:.2f})')
@@ -74,6 +75,7 @@ def plot_roc_curves(input_dir="/home/harry/Documents/codes/CLAM_ruby/results/KRA
     plt.close()
 
     print(f"Median AUC: {median_auc:.2f}")
+    print(f"Mean AUC: {mean_auc:.2f}")
     print(f"Max AUC: {max_auc:.2f}")
 
 if __name__ == "__main__":
