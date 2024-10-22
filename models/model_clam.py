@@ -13,7 +13,7 @@ args:
     n_classes: number of classes 
 """
 class Attn_Net(nn.Module):
-
+    #def __init__(self, L = 2560, D = 512, dropout = False, n_classes = 1):
     def __init__(self, L = 1024, D = 256, dropout = False, n_classes = 1):
     #def __init__(self, L = 1000, D = 256, dropout = False, n_classes = 1):
         super(Attn_Net, self).__init__()
@@ -40,6 +40,7 @@ args:
     n_classes: number of classes 
 """
 class Attn_Net_Gated(nn.Module):
+    #def __init__(self, L =2560, D = 512, dropout = False, n_classes = 1):
     def __init__(self, L = 1024, D = 256, dropout = False, n_classes = 1):
     #def __init__(self, L = 1000, D = 256, dropout = False, n_classes = 1):
         super(Attn_Net_Gated, self).__init__()
@@ -80,6 +81,7 @@ class CLAM_SB(nn.Module):
     def __init__(self, gate = True, size_arg = "small", dropout = False, k_sample=8, n_classes=2,
         instance_loss_fn=nn.CrossEntropyLoss(), subtyping=False):
         super(CLAM_SB, self).__init__()
+        #self.size_dict = {"small": [2560, 512, 256], "big": [2560, 512, 384]}
         self.size_dict = {"small": [1024, 512, 256], "big": [1024, 512, 384]}
         #self.size_dict = {"small": [1000, 512, 256], "big": [1000, 512, 384]}
         size = self.size_dict[size_arg]
@@ -118,6 +120,8 @@ class CLAM_SB(nn.Module):
     #instance-level evaluation for in-the-class attention branch
     def inst_eval(self, A, h, classifier): 
         device=h.device
+        print(h.shape)
+        
         if len(A.shape) == 1:
             A = A.view(1, -1)
         top_p_ids = torch.topk(A, self.k_sample)[1][-1]
@@ -131,7 +135,12 @@ class CLAM_SB(nn.Module):
         all_instances = torch.cat([top_p, top_n], dim=0)
         logits = classifier(all_instances)
         all_preds = torch.topk(logits, 1, dim = 1)[1].squeeze(1)
+        print("logits shape")
+        print(logits.shape)
+        print("all targets")
+        print(all_targets.shape)
         instance_loss = self.instance_loss_fn(logits, all_targets)
+        raise NotImplementedError("Stop")
         return instance_loss, all_preds, all_targets
     
     #instance-level evaluation for out-of-the-class attention branch
@@ -151,11 +160,6 @@ class CLAM_SB(nn.Module):
         device = h.device
         A, h = self.attention_net(h)  # NxK   
         verbose = False
-        if verbose == True:
-            print('A shape')
-            print(A.shape)     
-            print("Extracted feature shape")
-            print(h.shape)
         #raise NotImplementedError("Stop here for now!")
         A = torch.transpose(A, 1, 0)  # KxN
         if attention_only:
@@ -191,15 +195,10 @@ class CLAM_SB(nn.Module):
                 total_inst_loss /= len(self.instance_classifiers)
                 
         M = torch.mm(A, h) 
-        if verbose == True:
-            print("M shape")
-            print(M.shape)
+
 
         logits = self.classifiers(M)
-        if verbose == True:
-            print("Logits shape")
-            print(logits.shape)
-            raise NotImplementedError("Stop here for now")
+
         Y_hat = torch.topk(logits, 1, dim = 1)[1]
         Y_prob = F.softmax(logits, dim = 1)
         if instance_eval:
