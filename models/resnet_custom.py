@@ -63,10 +63,7 @@ class Bottleneck_Baseline(nn.Module):
         out = self.relu(out)
 
         return out
-class YoloResNeXt(nn.Module):
-    def __init__(self, num_classes=1000):
-        super(YoloResNeXt, self).__init__()
-        pass
+
 
 class ResNet_Baseline(nn.Module):
 

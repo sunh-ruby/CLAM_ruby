@@ -15,7 +15,7 @@ from utils.plots import plot_one_box, plot_one_point
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 from utils.datasets import create_dataloader
 from classifier.models import Img_DataLoader, eval_hs
-
+from models.resnext import Myresnext50
 
 class opt:
     def __init__(self):
@@ -50,6 +50,7 @@ class YoloResNeXt:
         self.model = attempt_load(opt.weights, map_location=self.device)  # load FP32 model
         self.stride = int(self.model.stride.max())  # model stride
         self.imgsz = check_img_size(opt.img_size, s=self.stride)  # check img_size
+        self.cell_extractor = Cell_embedding_extractors(checkpoint_path = opt.classifier_path)
         if self.half:
             self.model.half()  # to FP16
 
@@ -125,7 +126,24 @@ class YoloResNeXt:
         patch_feature = feature_embedding.mean(axis = 0)
         return patch_feature
 
-    def extract_fe(self):
+    def extraction(self, ckpt_dir, X_test, labels):
+        cell_types_df =meta_table(class_number=7)
+        assert len(X_test) == len(labels), "Length of X_test and labels should be same"
+        Orig_img = Img_DataLoader(array_list= X_test, split='viz',df= cell_types_df,transform =transform_pipeline(), 
+                                names= labels)
+        shuffle = False
+        dataloader = DataLoader(Orig_img, batch_size=1024, num_workers=2, shuffle=shuffle, )
+
+        for i, _batch in enumerate(dataloader):
+
+            if i == 0:
+                images = _batch["image"].cuda()
+                pred_hidden_layer = My_model.pretrained(images)
+            else:
+                images = _batch["image"].cuda()
+                pred_hidden_layer = torch.cat((pred_hidden_layer, My_model.pretrained(images)), 0)
+        return pred_hidden_layer.cpu().detach().numpy()
+        
 
 
 
@@ -151,8 +169,13 @@ class Cell_embedding_extractors:
 
         My_model = My_model.cuda().eval()
         cell_types_df =meta_table(class_number=7)
+        self.cell_extractor = My_model.pretrained
 
-    def forward
+    def forward(self, x):
+        x = self.cell_extractor(x)
+        return x
+
+
 
     
 
