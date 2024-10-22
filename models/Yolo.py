@@ -118,14 +118,14 @@ class YoloResNeXt:
                     temp_img_list.append(temp_img)
                     cell_name = save_path.split('/')[-1].split('.')[0] + f'_{points[0][0]}_{points[0][1]}'
                     temp_img_name.append(cell_name)
-        feature_embedding = self.encoder(ckpt_dir = checkpoint_path, X_test = temp_img_list, labels = temp_img_name)
+        feature_embedding = self.extraction(ckpt_dir = checkpoint_path, X_test = temp_img_list, labels = temp_img_name)
 
         # the output of feature embedding is the feature of the cell images
         # use mean to compute it as the patch feature
         patch_feature = feature_embedding.mean(axis = 0)
         return patch_feature
 
-    def encoder(self):
+    def extract_fe(self):
 
 
 
