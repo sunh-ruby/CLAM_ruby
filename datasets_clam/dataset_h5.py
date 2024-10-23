@@ -199,11 +199,6 @@ class Whole_Slide_Bag_FP_falcon(Dataset):
 		"""
 		self.pretrained=pretrained
 		self.wsi = wsi
-		if not custom_transforms:
-			self.roi_transforms = eval_transforms(pretrained=pretrained)
-		else:
-			self.roi_transforms = custom_transforms
-
 		self.file_path = file_path
 
 		with h5py.File(self.file_path, "r") as f:
@@ -231,7 +226,7 @@ class Whole_Slide_Bag_FP_falcon(Dataset):
 		print('\nfeature extraction settings')
 		print('target patch size: ', self.target_patch_size)
 		print('pretrained: ', self.pretrained)
-		print('transformations: ', self.roi_transforms)
+		#print('transformations: ', self.roi_transforms)
 
 	def __getitem__(self, idx):
 		with h5py.File(self.file_path,'r') as hdf5_file:
@@ -240,7 +235,10 @@ class Whole_Slide_Bag_FP_falcon(Dataset):
 
 		if self.target_patch_size is not None:
 			img = img.resize(self.target_patch_size)
-		return img, coord
+		img_array = np.array(img).astype(np.uint8)
+		
+
+		return img_array, coord
 
 
 class Dataset_All_Bags(Dataset):
